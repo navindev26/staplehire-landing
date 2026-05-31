@@ -1,0 +1,1088 @@
+@import 'tailwindcss';
+
+@import 'tw-animate-css';
+
+@import './styles/style-nova.css';
+
+@custom-variant data-horizontal (&[data-orientation="horizontal"], &[data-horizontal]);
+@custom-variant data-vertical (&[data-orientation="vertical"], &[data-vertical]);
+@custom-variant data-checked (&[data-state="checked"], &[data-checked]);
+@custom-variant data-unchecked (&[data-state="unchecked"], &[data-unchecked]);
+@custom-variant data-active (&[data-state="active"], &[data-active]);
+@custom-variant data-open (&[data-state="open"], &[data-open]);
+@custom-variant data-closed (&[data-state="closed"], &[data-closed]);
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility no-spinners {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+}
+
+/* ================================================================
+   Typography tokens — single source of truth for marketing type.
+   Mobile-first base values, with responsive bumps via @variant sm/md
+   so breakpoints stay aligned with Tailwind's own scale.
+   See DESIGN.md for the full scale table.
+   ================================================================ */
+
+/** Display — hero/landing headlines **/
+@utility typography-display {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-size: 36px;
+  @variant sm {
+    font-size: 48px;
+  }
+  @variant md {
+    font-size: 64px;
+  }
+}
+
+/** Marketing / landing H1 — primary section headlines **/
+@utility typography-h1 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-size: 32px;
+  @variant sm {
+    font-size: 44px;
+  }
+  @variant md {
+    font-size: 56px;
+  }
+}
+
+/** Marketing / landing H2 — section titles **/
+@utility typography-h2 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-size: 26px;
+  @variant sm {
+    font-size: 36px;
+  }
+  @variant md {
+    font-size: 44px;
+  }
+}
+
+/** Marketing / landing H3 — subsection / step titles **/
+@utility typography-h3 {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-size: 20px;
+  @variant sm {
+    font-size: 28px;
+  }
+  @variant md {
+    font-size: 32px;
+  }
+}
+
+/** Eyebrow — small label above a heading **/
+@utility typography-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-size: 12px;
+  @variant sm {
+    font-size: 13px;
+  }
+  @variant md {
+    font-size: 14px;
+  }
+}
+
+/** Pull quote / testimonial quote **/
+@utility typography-quote {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-size: 24px;
+  @variant sm {
+    font-size: 32px;
+  }
+  @variant md {
+    font-size: 40px;
+  }
+}
+
+/** Body paragraph (large) **/
+@utility para-lg {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  font-size: 16px;
+  @variant sm {
+    font-size: 17px;
+  }
+  @variant md {
+    font-size: 18px;
+  }
+}
+
+/** Body paragraph (default) **/
+@utility para {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  font-size: 14px;
+  @variant sm {
+    font-size: 15px;
+  }
+  @variant md {
+    font-size: 16px;
+  }
+}
+
+/** Body paragraph (small) **/
+@utility para-sm {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  font-size: 12px;
+  @variant sm {
+    font-size: 13px;
+  }
+}
+
+/** Caption — meta text and timestamps **/
+@utility caption {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+/** Dark Mode Variant **/
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   STAPLEHIRE - SHADCN/UI THEME CONFIGURATION
+   ============================================
+
+   Official Brand Colors:
+   - Passion (Orange):  #FF6701 - Primary, CTAs
+   - Deep Work (Dark):  #252422 - Text, secondary
+   - Hustle (Blue):     #55ABED - Links, info
+   - Ebony (Purple):    #B596E5 - Accents
+   - Build (Green):     #22C55E - Success
+   - Warm White:        #FAF9F7 - Backgrounds
+
+   Typography:
+   - Outfit throughout (300-800). No Inter, no DM Sans, no monospace.
+   ============================================ */
+
+@layer base {
+  /* ==========================================
+     PRIMITIVES - Base palette (hex only)
+     ========================================== */
+  :root {
+    /* Brand */
+    --primitive-passion: #FF6701;
+    --primitive-passion-hover: #E55C00;
+    --primitive-passion-dark: #FF7A1A;
+    --primitive-deep-work: #252422;
+    --primitive-hustle: #55ABED;
+    --primitive-hustle-light: #7AC2F5;
+    --primitive-ebony: #B596E5;
+    --primitive-ebony-light: #C4A8ED;
+    --primitive-build: #90EE80;
+    --primitive-build-dark: #7DD97D;
+    --primitive-build-text: #199848;
+    --primitive-zircon: #FAF9F7;  
+
+    /* Warm neutrals (stone palette per DESIGN.md) */
+    --primitive-white: #FFFFFF;
+    --primitive-sunken: #F5F3F0;
+    --primitive-border: #E2DED9;
+    --primitive-gray-400: #A8A29E;
+    --primitive-gray-500: #78716C;
+    --primitive-gray-600: #57534E;
+    --primitive-near-black: #171717;
+    --primitive-fg-light: #EDEDEC;
+    --primitive-fg-dark: #FAFAFA;
+
+    /* Dark-theme-specific (warm stone, 15% opacity formula over #131314) */
+    --primitive-bg-dark: #08090A;
+    --primitive-bg-dark-alt: #131314;
+    --primitive-sunken-dark: #0E0F10;
+    --primitive-muted-foreground-dark: #A8A29E;
+    --primitive-accent-dark: #1E1E1F;
+    --primitive-border-dark: #28272A;
+    --primitive-input-dark: #28272A;
+    --primitive-destructive-dark: #EF4444;
+    --primitive-destructive-soft-dark: #341A1B;
+    --primitive-success-dark: #4ADE80;
+    --primitive-success-soft-dark: #1B3124;
+    --primitive-warning-dark: #FBBF24;
+    --primitive-warning-soft-dark: #362D16;
+    --primitive-passion-soft-dark: #362215;
+    --primitive-hustle-soft-dark: #222D36;
+    --primitive-ebony-soft-dark: #2E2935;
+    --primitive-build-soft-dark: #1B3124;
+    --primitive-text-secondary-dark: #A8A29E;
+
+    /* Signal colors for verdict badges */
+    --signal-strong: #199848;
+    --signal-strong-soft: #DFF2DC;
+    --signal-mid: #B8892E;
+    --signal-mid-soft: #FEF0CD;
+    --signal-weak: #DC2626;
+    --signal-weak-soft: #FDE8E8;
+
+    /* Semantic (shared) */
+    --primitive-destructive: #EF4444;
+    --primitive-success: #22C55E;
+    --primitive-warning: #F59E0B;
+    --primitive-amber: #E5A800;
+
+    /* Soft variants (light) per DESIGN.md */
+    --primitive-passion-soft: #FDDCBB;
+    --primitive-hustle-soft: #E0F0FD;
+    --primitive-ebony-soft: #F3EEFC;
+    --primitive-build-soft: #DFF2DC;
+
+    /* Green scale (e.g. status badges) */
+    --color-green-200: #f2fdf0;
+    --color-green-600: #3ac522;
+
+    /* ==========================================
+       LIGHT THEME - from primitives
+       ========================================== */
+    --background: var(--primitive-zircon);
+    --foreground: var(--primitive-deep-work);
+
+    --card: var(--primitive-white);
+    --card-foreground: var(--primitive-deep-work);
+
+    --surface-subtle: var(--primitive-sunken);
+    --surface-subtle-foreground: var(--primitive-deep-work);
+
+    --popover: var(--primitive-white);
+    --popover-foreground: var(--primitive-deep-work);
+
+    --primary: var(--primitive-passion);
+    --primary-foreground: var(--primitive-white);
+    --brand: var(--primitive-passion); /* required by Plate editor selection styling */
+
+    --secondary: var(--primitive-deep-work);
+    --secondary-foreground: var(--primitive-white);
+
+    --muted: var(--primitive-sunken);
+    --muted-foreground: var(--primitive-gray-500);
+
+    --accent: var(--primitive-sunken);
+    --accent-foreground: var(--primitive-deep-work);
+
+    --destructive: var(--primitive-destructive);
+    --destructive-foreground: var(--primitive-white);
+
+    --success: var(--primitive-success);
+    --success-foreground: var(--primitive-white);
+
+    --warning: var(--primitive-warning);
+    --warning-foreground: var(--primitive-deep-work);
+
+    --info: var(--primitive-hustle);
+    --info-foreground: var(--primitive-white);
+
+    --invert: var(--primitive-near-black);
+    --invert-foreground: var(--primitive-fg-dark);
+
+    --border: var(--primitive-border);
+    --input: var(--primitive-border);
+    --ring: var(--primitive-passion);
+
+    --chart-1: var(--primitive-passion);
+    --chart-2: var(--primitive-hustle);
+    --chart-3: var(--primitive-build);
+    --chart-4: var(--primitive-ebony);
+    --chart-5: var(--primitive-amber);
+
+    --sidebar: var(--primitive-zircon);
+    --sidebar-foreground: var(--primitive-deep-work);
+    --sidebar-primary: var(--primitive-passion);
+    --sidebar-primary-foreground: var(--primitive-white);
+    --sidebar-accent: var(--primitive-sunken);
+    --sidebar-accent-foreground: var(--primitive-deep-work);
+    --sidebar-border: transparent;
+    --sidebar-ring: var(--primitive-passion);
+    --sidebar-width-icon: 3rem;
+
+    --radius: 0.5rem;
+
+    /* StapleHire brand - light */
+    --sh-passion: var(--primitive-passion);
+    --sh-passion-hover: var(--primitive-passion-hover);
+    --sh-deep-work: var(--primitive-deep-work);
+    --sh-hustle: var(--primitive-hustle);
+    --sh-ebony: var(--primitive-ebony);
+    --sh-build: var(--primitive-build);
+    --sh-zircon: var(--primitive-zircon);
+
+    --sh-passion-soft: var(--primitive-passion-soft);
+    --sh-hustle-soft: var(--primitive-hustle-soft);
+    --sh-ebony-soft: var(--primitive-ebony-soft);
+    --sh-build-soft: var(--primitive-build-soft);
+    --sh-build-text: var(--primitive-build-text);
+
+    --sh-text-primary: var(--primitive-deep-work);
+    --sh-text-secondary: var(--primitive-gray-600);
+    --sh-text-muted: var(--primitive-gray-500);
+
+    --sh-surface-main: var(--primitive-zircon);
+    --sh-surface-elevated: var(--primitive-white);
+    --sh-surface-sunken: var(--primitive-sunken);
+
+    /* Badge primary variant (soft) */
+    --badge-primary-bg: #FEDDC7;
+    --badge-primary-fg: var(--primitive-passion);
+
+    /* Text selection, ebony tint */
+    --selection-bg: color-mix(in srgb, var(--primitive-ebony-light) 35%, transparent);
+    --selection-fg: var(--foreground);
+
+    /* Typography — Outfit throughout (300–800), mono for code/timestamps */
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-outfit: var(--font-sans);
+    --font-inter: var(--font-sans);
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+    /* Typography scale lives in @utility blocks at the top of this
+       file (typography-h1, typography-h2, para-lg, etc.). They are
+       responsive via @variant sm/md and stay aligned with Tailwind's
+       breakpoint system automatically. See DESIGN.md for the table. */
+
+    /* Shadows */
+    --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  /* ==========================================
+     DARK THEME - from primitives
+     ========================================== */
+  .dark {
+    --background: var(--primitive-bg-dark);
+    --foreground: var(--primitive-fg-light);
+
+    --card: var(--primitive-bg-dark-alt);
+    --card-foreground: var(--primitive-fg-light);
+
+    --surface-subtle: var(--primitive-accent-dark);
+    --surface-subtle-foreground: var(--primitive-fg-light);
+
+    --popover: var(--primitive-bg-dark-alt);
+    --popover-foreground: var(--primitive-fg-light);
+
+    --primary: var(--primitive-passion-dark);
+    --primary-foreground: var(--primitive-white);
+    --brand: var(--primitive-passion-dark); /* required by Plate editor selection styling */
+
+    --secondary: var(--primitive-fg-light);
+    --secondary-foreground: var(--primitive-bg-dark);
+
+    --muted: var(--primitive-sunken-dark);
+    --muted-foreground: var(--primitive-muted-foreground-dark);
+
+    --accent: var(--primitive-accent-dark);
+    --accent-foreground: var(--primitive-fg-light);
+
+    --destructive: var(--primitive-destructive-dark);
+    --destructive-foreground: var(--primitive-white);
+
+    --success: var(--primitive-success-dark);
+    --success-foreground: var(--primitive-bg-dark);
+
+    --warning: var(--primitive-warning-dark);
+    --warning-foreground: var(--primitive-bg-dark);
+
+    --info: var(--primitive-hustle-light);
+    --info-foreground: var(--primitive-white);
+
+    --invert: var(--primitive-gray-500);
+    --invert-foreground: var(--primitive-fg-dark);
+
+    --border: var(--primitive-border-dark);
+    --input: var(--primitive-input-dark);
+    --ring: var(--primitive-passion-dark);
+
+    --chart-1: var(--primitive-passion-dark);
+    --chart-2: var(--primitive-hustle-light);
+    --chart-3: var(--primitive-build-dark);
+    --chart-4: var(--primitive-ebony-light);
+    --chart-5: var(--primitive-amber);
+
+    --sidebar: var(--primitive-bg-dark);
+    --sidebar-foreground: var(--primitive-fg-light);
+    --sidebar-primary: var(--primitive-passion-dark);
+    --sidebar-primary-foreground: var(--primitive-white);
+    --sidebar-accent: var(--primitive-accent-dark);
+    --sidebar-accent-foreground: var(--primitive-fg-light);
+    --sidebar-border: transparent;
+    --sidebar-ring: var(--primitive-passion-dark);
+    --sidebar-width-icon: 3rem;
+
+    /* Signal colors - dark overrides */
+    --signal-strong: #4ADE80;
+    --signal-strong-soft: #1B3124;
+    --signal-mid: #FBBF24;
+    --signal-mid-soft: #362D16;
+    --signal-weak: #EF4444;
+    --signal-weak-soft: #341A1B;
+
+    /* StapleHire brand - dark */
+    --sh-passion: var(--primitive-passion-dark);
+    --sh-passion-hover: var(--primitive-passion);
+    --sh-deep-work: var(--primitive-fg-light);
+    --sh-hustle: var(--primitive-hustle-light);
+    --sh-ebony: var(--primitive-ebony-light);
+    --sh-build: var(--primitive-build-dark);
+    --sh-zircon: var(--primitive-bg-dark);
+
+    --sh-passion-soft: var(--primitive-passion-soft-dark);
+    --sh-hustle-soft: var(--primitive-hustle-soft-dark);
+    --sh-ebony-soft: var(--primitive-ebony-soft-dark);
+    --sh-build-soft: var(--primitive-build-soft-dark);
+    --sh-build-text: var(--primitive-build-dark);
+
+    --sh-text-primary: var(--primitive-fg-light);
+    --sh-text-secondary: var(--primitive-text-secondary-dark);
+    --sh-text-muted: var(--primitive-muted-foreground-dark);
+
+    --sh-surface-main: var(--primitive-bg-dark);
+    --sh-surface-elevated: var(--primitive-bg-dark-alt);
+    --sh-surface-sunken: var(--primitive-sunken-dark);
+
+    /* Badge primary variant (soft) */
+    --badge-primary-bg: rgba(255, 103, 1, 0.16);
+    --badge-primary-fg: var(--primitive-passion-dark);
+
+    /* Text selection, ebony tint (slightly stronger on dark) */
+    --selection-bg: color-mix(in srgb, var(--primitive-ebony-light) 50%, transparent);
+    --selection-fg: var(--foreground);
+
+    /* Typography — Outfit throughout (300–800), mono for code/timestamps */
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-outfit: var(--font-sans);
+    --font-inter: var(--font-sans);
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+    /* Shadows (stronger for dark mode) */
+    --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.6);
+    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+  }
+}
+
+/** Theme Setup **/
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-subtle-foreground: var(--surface-subtle-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Staplehire brand colors */
+  --color-sh-passion: var(--sh-passion);
+  --color-sh-deep-work: var(--sh-deep-work);
+  --color-sh-hustle: var(--sh-hustle);
+  --color-sh-hustle-soft: var(--sh-hustle-soft);
+  --color-sh-ebony: var(--sh-ebony);
+  --color-sh-build: var(--sh-build);
+  --color-sh-zircon: var(--sh-zircon);
+  --color-sh-text-secondary: var(--sh-text-secondary);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --color-invert: var(--invert);
+  --color-invert-foreground: var(--invert-foreground);
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-100% - var(--gap))); }
+  }
+
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-100% - var(--gap))); }
+  }
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  *:focus-visible {
+    @apply outline-ring rounded-xs shadow-none outline-2 outline-offset-3 transition-none!;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none;
+  }
+
+  /** Text selection — global, brand-tinted (Hustle blue) **/
+  ::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-fg);
+  }
+  ::-moz-selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-fg);
+  }
+
+  /** Prevent selection highlight tint on non-text elements **/
+  img,
+  svg,
+  video,
+  canvas,
+  picture {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  img::selection,
+  svg::selection,
+  video::selection,
+  canvas::selection,
+  picture::selection {
+    background-color: transparent;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/** Line Clamp Utilities **/
+@layer utilities {
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+}
+
+/** Font Utilities — Outfit is the sole UI font **/
+@layer utilities {
+  .font-outfit {
+    font-family: var(--font-sans);
+  }
+  .font-inter {
+    font-family: var(--font-sans);
+  }
+  .font-dm-sans {
+    font-family: var(--font-sans);
+  }
+}
+
+/* ============================================
+   COMPONENT STYLE OVERRIDES
+   ============================================ */
+
+@layer components {
+  /* Button variants */
+  .btn-passion {
+    @apply bg-sh-passion text-white font-bold hover:opacity-90;
+  }
+
+  .btn-deep-work {
+    @apply bg-sh-deep-work text-white hover:opacity-90;
+  }
+
+  .btn-outline {
+    @apply bg-card text-foreground border border-border hover:bg-muted;
+  }
+
+  /* Card styles */
+  .card-staplehire {
+    @apply bg-card border border-border rounded-xl shadow-sm;
+  }
+
+  .card-staplehire-elevated {
+    @apply bg-card border border-border rounded-2xl shadow-lg;
+  }
+
+  /* Badge variants - Brand colors */
+  .badge-passion {
+    background: var(--sh-passion-soft);
+    color: var(--sh-passion);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-hustle {
+    background: var(--sh-hustle-soft);
+    color: var(--sh-hustle);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-ebony {
+    background: var(--sh-ebony-soft);
+    color: var(--sh-ebony);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-build {
+    background: var(--sh-build-soft);
+    color: var(--sh-build-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-outline {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+           bg-card border border-border text-muted-foreground;
+  }
+
+  /* Legacy badge names for compatibility */
+  .badge-blue {
+    background: var(--sh-hustle-soft);
+    color: var(--sh-hustle);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-purple {
+    background: var(--sh-ebony-soft);
+    color: var(--sh-ebony);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-green {
+    background: var(--sh-build-soft);
+    color: var(--sh-build-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  /* Pipeline column */
+  .pipeline-column {
+    @apply bg-muted border border-border rounded-xl p-4 min-h-[320px];
+  }
+
+  /* Candidate card */
+  .candidate-card {
+    @apply bg-card border border-input rounded-lg p-3.5 mb-3 
+           shadow-sm transition-all cursor-pointer
+           hover:translate-y-[-2px] hover:shadow-md;
+  }
+
+  /* Toggle styles */
+  .toggle-row {
+    @apply flex justify-between items-center p-4 
+           bg-muted border border-border rounded-lg mb-3;
+  }
+
+  .toggle-row-active {
+    @apply bg-card;
+  }
+
+  /* Avatar variants */
+  .avatar-passion {
+    @apply bg-sh-passion text-white;
+  }
+
+  .avatar-hustle {
+    @apply bg-sh-hustle text-white;
+  }
+
+  .avatar-ebony {
+    @apply bg-sh-ebony text-white;
+  }
+
+  .avatar-build {
+    @apply bg-sh-build text-foreground;
+  }
+
+  .avatar-deep-work {
+    @apply bg-sh-deep-work text-white;
+  }
+
+  /* Tab styles */
+  .tab-staplehire {
+    @apply px-4 py-2 text-sm font-medium text-muted-foreground 
+           cursor-pointer relative flex items-center gap-2
+           transition-colors hover:text-foreground rounded-md;
+  }
+
+  .tab-staplehire-active {
+    @apply text-foreground bg-card shadow-sm;
+  }
+
+  .tab-staplehire-active svg {
+    color: var(--sh-passion);
+  }
+
+  /* Skill tag */
+  .skill-tag {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs
+           bg-primary/10 text-primary border border-primary/20;
+  }
+
+  /* Status badges */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-badge-success {
+    @apply bg-success/10 text-success border border-success/20;
+  }
+
+  .status-badge-pending {
+    @apply bg-warning/10 text-warning border border-warning/20;
+  }
+
+  .status-badge-screening {
+    @apply bg-primary/10 text-primary border border-primary/20;
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@layer components {
+  @keyframes float {
+    0%, 100% { transform: rotate(12deg) translateY(0); }
+    50% { transform: rotate(12deg) translateY(-10px); }
+  }
+
+  @keyframes wave {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.5); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes interviewQuestionFade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-interview-question-fade {
+    animation: interviewQuestionFade 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    will-change: opacity, transform;
+  }
+
+  .interview-content-stage {
+    --interview-voice-mark-height: 51px;
+    --interview-content-gap: 2.75rem;
+    --interview-question-space: clamp(11rem, 30vh, 16rem);
+    --interview-stage-shift: 0px;
+  }
+
+  .interview-stage-grid {
+    --interview-stage-shift: 0px;
+    transform: translate3d(0, calc(var(--interview-stage-shift) * -1), 0);
+  }
+
+  .interview-voice-positioner {
+    transform: translate3d(0, -50%, 0);
+    transition-property: transform, opacity;
+    transition-duration: 420ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform, opacity;
+  }
+
+  .interview-voice-positioner[data-has-question="true"] {
+    transform: translate3d(
+      0,
+      calc(-50% - ((var(--interview-question-space) + var(--interview-content-gap)) / 2)),
+      0
+    );
+  }
+
+  .interview-voice-positioner[data-reduced-motion="true"] {
+    transition-duration: 0ms;
+    will-change: auto;
+  }
+
+  .interview-question-region {
+    transform: translate3d(
+      0,
+      calc((var(--interview-voice-mark-height) + var(--interview-content-gap) - var(--interview-question-space)) / 2),
+      0
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - 28px),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black 0,
+      black calc(100% - 28px),
+      transparent 100%
+    );
+  }
+
+  @media (width >= 48rem) {
+    .interview-content-stage {
+      --interview-content-gap: 3.5rem;
+      --interview-question-space: clamp(14.5rem, 27vh, 19rem);
+    }
+
+    .interview-stage-grid {
+      --interview-stage-shift: 56px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-interview-question-fade {
+      animation: none;
+      will-change: auto;
+    }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-wave {
+    animation: wave 1s ease-in-out infinite;
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.8s ease-out;
+  }
+
+  .animate-pulse-dot {
+    animation: pulse-dot 2s infinite;
+  }
+
+  /* Waveform bar */
+  .waveform-bar {
+    @apply w-1 bg-primary rounded-sm;
+    animation: wave 1s ease-in-out infinite;
+  }
+
+  /* Hired badge floating */
+  .hired-badge {
+    @apply absolute bg-card/90 backdrop-blur-sm border-2 border-dashed 
+           border-sh-hustle rounded-xl px-5 py-3;
+    transform: rotate(12deg);
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
+/** Custom Scrollbar **/
+@layer base {
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--input);
+    border-radius: 5px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--input) transparent;
+  }
+
+  /* Override browser autofill background — needs !important to beat UA !important */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px var(--card) inset !important;
+    box-shadow: 0 0 0 30px var(--card) inset !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
+    transition: background-color 5000s ease-in-out 0s;
+  }
+}
+
+/** Custom Container **/
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1440px) {
+    padding-inline: 2rem;
+    max-width: 1440px;
+  }
+}
+
+/** Smooth scroll **/
+html {
+  scroll-behavior: smooth;
+}
+
+/* Sidebar overlay customizations */
+@layer components {
+  /* Hide the sidebar gap that reserves space */
+  .sidebar-overlay [data-slot="sidebar-gap"] {
+    width: 0 !important;
+    display: none !important;
+  }
+
+  /* Make sidebar container fully overlay */
+  .sidebar-overlay [data-slot="sidebar-container"] {
+    position: fixed !important;
+    z-index: 50 !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+
+  /* Hide the gap for collapsible icon mode */
+  .group\/sidebar-wrapper [data-slot="sidebar-gap"] {
+    display: none !important;
+    width: 0 !important;
+  }
+}
+/*---break---*/
+:root {
+  --destructive-foreground: var(--color-red-800);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-900);
+  --info: var(--color-violet-500);
+  --info-foreground: var(--color-violet-900);
+  --warning: var(--color-yellow-500);
+  --warning-foreground: var(--color-yellow-900);
+  --invert: var(--color-zinc-900);
+  --invert-foreground: var(--color-zinc-50);
+}
+/*---break---*/
+.dark {
+  --destructive-foreground: var(--color-red-600);
+  --success: var(--color-emerald-500);
+  --success-foreground: var(--color-emerald-600);
+  --info: var(--color-violet-500);
+  --info-foreground: var(--color-violet-600);
+  --warning: var(--color-yellow-500);
+  --warning-foreground: var(--color-yellow-600);
+  --invert: var(--color-zinc-700);
+  --invert-foreground: var(--color-zinc-50);
+}
