@@ -1,10 +1,10 @@
 ---
-title: "Send an interview with the Staplehire CLI"
-description: "Create an interview design and send a Staplehire interview invite or link from the CLI."
-sidebarTitle: "Send an interview"
+title: "Interview a candidate with Staplehire"
+description: "Create an interview design and interview a candidate with Staplehire from the CLI."
+sidebarTitle: "Interview a candidate"
 ---
 
-Create an interview design for a role, then send it to a candidate or generate a link.
+Create an interview design for a role, then invite a candidate or generate an interview link.
 
 ```bash
 DESIGN_ID=$(staplehire designs create <roleId> --type structured --brief "Async screening." | jq -r '.interview_design.id')
@@ -46,7 +46,7 @@ Example design output:
 | `designs create` | `--round-title <title>` | No | Candidate-facing interview round title |
 | `candidates send-interview` | `<candidateId>` | Yes | Candidate to invite |
 | `candidates send-interview` | `--design <designId>` | Yes | Interview design to send |
-| `candidates send-interview` | \`--mode email | link\` | No | Send email or return a link |
+| `candidates send-interview` | `--mode email|link` | No | Send email or return a link |
 
 ## Examples
 
@@ -85,7 +85,7 @@ staplehire sessions list <roleId> --candidate-email alex@company.com
 
 ## FAQ
 
-### Do I need a design before sending an interview?
+### Do I need a design before interviewing a candidate?
 
 Yes. Create a design with `staplehire designs create`, then pass its ID to `candidates send-interview`.
 

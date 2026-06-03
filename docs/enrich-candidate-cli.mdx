@@ -1,10 +1,10 @@
 ---
-title: "Enrich a candidate with the Staplehire CLI"
-description: "Start a Staplehire candidate research job, poll it, and read candidate research from the CLI."
-sidebarTitle: "Enrich a candidate"
+title: "Research a candidate with Staplehire"
+description: "Start a Staplehire candidate research job, get its status, and read candidate research from the CLI."
+sidebarTitle: "Research candidate"
 ---
 
-Use `candidates enrich` to start async candidate research, then poll the job and read results with `candidates research`.
+Use `candidates enrich` to start candidate research, then get the job status and read results with `candidates research`.
 
 ```bash
 JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
@@ -23,7 +23,7 @@ staplehire jobs poll "$JOB_ID"
 staplehire candidates research <candidateId>
 ```
 
-Example enrich output:
+Example research job output:
 
 ```json
 {
@@ -53,13 +53,13 @@ Example research output:
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `<candidateId>` | Yes | Candidate to enrich |
+| `<candidateId>` | Yes | Candidate to research |
 | `--prompt <text>` | No | Extra research instructions |
 | `--force` | No | Start a fresh job when allowed |
 
 ## Examples
 
-### Enrich and extract the summary
+### Research a candidate and extract the summary
 
 ```bash
 JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
@@ -69,11 +69,11 @@ staplehire candidates research <candidateId> | jq -r '.research.summary'
 
 ### Reuse an existing in-flight job
 
-If the response has `"created": false`, a job is already running. Poll the returned `job.id`.
+If the response has `"created": false`, a job is already running. Check the returned `job.id` instead of starting a duplicate.
 
 ```bash
 JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID"
+staplehire jobs get "$JOB_ID"
 ```
 
 ### Read screening results
@@ -87,14 +87,14 @@ staplehire candidates screening-result <candidateId>
 | Error | Cause | Fix |
 | --- | --- | --- |
 | `NotFoundError` | Candidate does not exist | Run `candidates list` or `candidates get` |
-| Exit code `9` | Poll timed out | Increase `--timeout` or check `jobs get` later |
+| Exit code `9` | Job status wait timed out | Increase `--timeout` or check `jobs get` later |
 | `AuthenticationError` | Missing API key | Run `staplehire login` or set `STAPLEHIRE_KEY` |
 
 ## FAQ
 
-### Is candidate enrichment synchronous?
+### Is candidate research synchronous?
 
-No. It creates a job. Poll it before calling `candidates research`.
+No. It creates a job. Check the job status before calling `candidates research`.
 
 ### Can I customize the research focus?
 
@@ -104,4 +104,4 @@ Yes. Pass `--prompt` to `candidates enrich`.
 
 Call `staplehire candidates research <candidateId>` after the job reaches `done`.
 
-Related: [Add a candidate with the Staplehire CLI](/add-candidate-cli) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Add a candidate with the Staplehire CLI](/add-candidate-cli) · [Get job status with the Staplehire CLI](/poll-agent-jobs) · [CLI errors](/cli-errors)
