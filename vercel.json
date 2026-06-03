@@ -31,6 +31,14 @@
   ],
   "rewrites": [
     {
+      "source": "/docs",
+      "destination": "https://staplehire.mintlify.dev/docs"
+    },
+    {
+      "source": "/docs/:match*",
+      "destination": "https://staplehire.mintlify.dev/docs/:match*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
