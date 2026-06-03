@@ -37,7 +37,7 @@ Use `--copy` to copy files instead of symlinking, or `--dry-run` to preview chan
 2. Discover commands with `staplehire commands`.
 3. Check auth and API reachability with `staplehire doctor -q`.
 4. Pass all required flags explicitly.
-5. Poll async jobs before reading generated results.
+5. Get job status before reading generated results.
 
 ```bash
 JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
@@ -62,7 +62,7 @@ staplehire sourcing prospects <roleId> | jq '.prospects[]'
 - Do not guess role, candidate, design, or job IDs.
 - Prefer `staplehire commands` over memorized command shapes.
 - Use `-q` or pipe stdout when a script needs JSON only.
-- After `candidates enrich` or `sourcing start`, call `jobs poll` before reading results.
+- After `candidates enrich` or `sourcing start`, check job status before reading results.
 
 ## FAQ
 
@@ -78,4 +78,4 @@ Run `staplehire doctor -q`. It confirms the CLI version, key source, API URL, an
 
 Run `staplehire commands`. It prints the machine-readable command tree as JSON.
 
-Related: [Authenticate the Staplehire CLI](/authentication) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Authenticate the Staplehire CLI](/authentication) · [Get job status with the Staplehire CLI](/poll-agent-jobs) · [CLI errors](/cli-errors)

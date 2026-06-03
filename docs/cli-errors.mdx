@@ -1,6 +1,6 @@
 ---
 title: "Staplehire CLI errors"
-description: "Fix Staplehire CLI authentication, validation, permission, conflict, upstream, usage, and job timeout errors."
+description: "Fix Staplehire CLI authentication, validation, permission, conflict, upstream, usage, and job status timeout errors."
 sidebarTitle: "CLI errors"
 ---
 
@@ -47,7 +47,7 @@ jq '.error' error.json
 | `6` | Permission, usually `403` | Check key organization and user permissions |
 | `7` | Upstream, usually `502` | Retry later or contact support with `requestId` |
 | `8` | CLI usage or bad args | Run `staplehire <command> --help` or `staplehire commands` |
-| `9` | Poll timeout | Re-run `jobs poll` with a longer timeout |
+| `9` | Job status timeout | Re-run `jobs poll` with a longer timeout |
 
 ## AuthenticationError
 
@@ -101,7 +101,7 @@ A resource already exists, commonly a duplicate candidate email on the same role
 staplehire candidates list --role-id <roleId> --email alex@company.com
 ```
 
-## Poll timeout
+## Job status timeout
 
 Exit code `9` means `jobs poll` stopped waiting. It does not necessarily mean the job failed.
 
@@ -124,4 +124,4 @@ Send `.error.requestId`, the command, and the timestamp.
 
 The timeout elapsed. The job may still be running, so inspect it with `jobs get` or poll again.
 
-Related: [Authenticate the Staplehire CLI](/authentication) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [Command reference](/commands)
+Related: [Authenticate the Staplehire CLI](/authentication) · [Get job status with the Staplehire CLI](/poll-agent-jobs) · [Command reference](/commands)

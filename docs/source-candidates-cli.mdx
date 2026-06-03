@@ -1,10 +1,10 @@
 ---
 title: "Source candidates with the Staplehire CLI"
-description: "Start an AI sourcing job from the Staplehire CLI, poll it, and fetch prospects for a role."
+description: "Start an AI sourcing job from the Staplehire CLI, get job status, and fetch prospects for a role."
 sidebarTitle: "Source candidates"
 ---
 
-Start a sourcing job for a role, poll the async job, then list matched prospects as JSON.
+Start a sourcing job for a role, check the async job status, then list matched prospects as JSON.
 
 ```bash
 JOB_ID=$(staplehire sourcing start <roleId> --prompt "Backend engineers, seed-stage, remote" | jq -r '.job.id')
@@ -77,11 +77,11 @@ staplehire sourcing prospects <roleId> | jq '.prospects[] | select(.fit_score >=
 
 ### Avoid duplicate sourcing jobs
 
-If `created` is `false`, a job is already in flight. Poll the returned `job.id` instead of starting another job.
+If `created` is `false`, a job is already in flight. Check the returned `job.id` instead of starting another job.
 
 ```bash
 JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID"
+staplehire jobs get "$JOB_ID"
 ```
 
 ## Common errors
@@ -90,13 +90,13 @@ staplehire jobs poll "$JOB_ID"
 | --- | --- | --- |
 | `NotFoundError` | The role ID does not exist | Run `staplehire roles list` and use a real role ID |
 | `AuthenticationError` | No API key is configured | Run `staplehire login` or set `STAPLEHIRE_KEY` |
-| Exit code `9` | Poll timed out | Increase `--timeout` or check the job later |
+| Exit code `9` | Job status wait timed out | Increase `--timeout` or check the job later |
 
 ## FAQ
 
 ### Does sourcing return results immediately?
 
-No. Sourcing is async. Call `jobs poll` before reading prospects.
+No. Sourcing is async. Check job status before reading prospects.
 
 ### Can I source with a custom prompt?
 
@@ -106,4 +106,4 @@ Yes. Pass `--prompt` to `sourcing start`.
 
 It is an alias for `sourcing prospects`.
 
-Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Get job status with the Staplehire CLI](/poll-agent-jobs) · [CLI errors](/cli-errors)

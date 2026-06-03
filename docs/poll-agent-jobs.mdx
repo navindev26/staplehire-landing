@@ -1,13 +1,14 @@
 ---
-title: "Poll Staplehire CLI jobs"
-description: "Use staplehire jobs poll to wait for sourcing, enrichment, and interview design jobs to finish."
-sidebarTitle: "Poll jobs"
+title: "Get job status with the Staplehire CLI"
+description: "Use Staplehire job commands to check sourcing, candidate research, and interview design job status."
+sidebarTitle: "Get job status"
 ---
 
-Use `jobs poll` after async commands like `sourcing start` and `candidates enrich` before reading generated results.
+Use `jobs get` or `jobs poll` to check async job status after commands like `sourcing start` and `candidates enrich`.
 
 ```bash
 JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
+staplehire jobs get "$JOB_ID"
 staplehire jobs poll "$JOB_ID" --interval 2000 --timeout 120000
 ```
 
@@ -19,7 +20,7 @@ staplehire jobs poll "$JOB_ID"
 staplehire sourcing prospects <roleId>
 ```
 
-Example poll output:
+Example job status output:
 
 ```json
 {
@@ -56,20 +57,20 @@ Example poll output:
 | --- | --- |
 | `0` | Job reached `done` |
 | `1` | Job reached `failed` |
-| `9` | Poll timed out; job may still be running |
+| `9` | Status wait timed out; job may still be running |
 
 ## Examples
 
-### Poll with a longer timeout
-
-```bash
-staplehire jobs poll <jobId> --interval 5000 --timeout 300000
-```
-
-### Inspect a job without blocking
+### Get status once
 
 ```bash
 staplehire jobs get <jobId>
+```
+
+### Wait for a job with a longer timeout
+
+```bash
+staplehire jobs poll <jobId> --interval 5000 --timeout 300000
 ```
 
 ### List recent sourcing jobs for a role
@@ -96,8 +97,8 @@ No. Exit code `9` means the CLI stopped waiting. The job may still finish later.
 
 `candidates enrich`, `sourcing start`, and some interview design generation flows create async jobs.
 
-### Should agents always poll?
+### Should agents always check job status?
 
-Yes. Agents should poll after async commands before reading results.
+Yes. Agents should check job status after async commands before reading results.
 
-Related: [Source candidates with the Staplehire CLI](/source-candidates-cli) · [Enrich a candidate with the Staplehire CLI](/enrich-candidate-cli) · [CLI errors](/cli-errors)
+Related: [Source candidates with the Staplehire CLI](/source-candidates-cli) · [Research a candidate with Staplehire](/enrich-candidate-cli) · [CLI errors](/cli-errors)
