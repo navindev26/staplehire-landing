@@ -1,0 +1,112 @@
+---
+title: "Add a candidate with the Staplehire CLI"
+description: "Add a candidate to a Staplehire role by email, name, stage, and profile fields from the CLI."
+sidebarTitle: "Add a candidate"
+---
+
+Add a candidate to a role with `candidates create`. The command is idempotent per role and email.
+
+```bash
+staplehire candidates create <roleId> --email alex@company.com --name "Alex Chen"
+```
+
+## Quickstart
+
+```bash
+staplehire candidates create 550e8400-e29b-41d4-a716-446655440000 \
+  --email alex@company.com \
+  --name "Alex Chen"
+```
+
+Example output:
+
+```json
+{
+  "candidate": {
+    "id": "cand_...",
+    "email": "alex@company.com",
+    "name": "Alex Chen",
+    "role_id": "550e8400-e29b-41d4-a716-446655440000",
+    "stage_id": "stage_..."
+  }
+}
+```
+
+Extract the candidate ID:
+
+```bash
+CANDIDATE_ID=$(staplehire candidates create <roleId> --email alex@company.com --name "Alex Chen" | jq -r '.candidate.id')
+```
+
+## Parameters
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `<roleId>` | Yes | Role to add the candidate to |
+| `--email <email>` | Yes | Candidate email address |
+| `--name <name>` | No | Display name |
+| `--stage-id <id>` | No | Pipeline stage ID |
+| `--stage <name>` | No | Stage name resolved on the role |
+| `--phone` | No | Candidate phone number |
+| `--linkedin-url` | No | LinkedIn profile URL |
+| `--portfolio-url` | No | Portfolio URL |
+| `--current-location` | No | Candidate location |
+
+## Examples
+
+### Add a candidate to a named stage
+
+```bash
+staplehire candidates create <roleId> \
+  --email alex@company.com \
+  --name "Alex Chen" \
+  --stage "Applied"
+```
+
+### Add profile links
+
+```bash
+staplehire candidates create <roleId> \
+  --email alex@company.com \
+  --name "Alex Chen" \
+  --linkedin-url https://linkedin.com/in/alexchen \
+  --portfolio-url https://alex.dev
+```
+
+### Move a candidate to a new stage
+
+```bash
+staplehire candidates move <candidateId> --stage-id <stageId>
+```
+
+## Read candidates
+
+```bash
+staplehire candidates list --role-id <roleId>
+staplehire candidates get <candidateId>
+staplehire candidates screening-result <candidateId>
+```
+
+## Common errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `ValidationError` | Invalid email or missing required flag | Pass a valid `--email` and role ID |
+| `ConflictError` | Duplicate candidate on the role | Fetch the existing candidate instead of creating another |
+| `NotFoundError` | Role or stage does not exist | Run `roles list` or `stages list <roleId>` |
+
+## FAQ
+
+### Can I add the same email twice?
+
+The command is idempotent per role and email. If the API returns a conflict, read the existing candidate.
+
+### Should I use `--stage` or `--stage-id`?
+
+Use `--stage-id` when you have the ID. Use `--stage` when you want the CLI to resolve a stage name on the role.
+
+### What is the alias for `candidates create`?
+
+`add` is an alias.
+
+Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Enrich a candidate with the Staplehire CLI](/enrich-candidate-cli) · [Send an interview with the Staplehire CLI](/send-interview-cli)

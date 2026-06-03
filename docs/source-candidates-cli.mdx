@@ -1,0 +1,109 @@
+---
+title: "Source candidates with the Staplehire CLI"
+description: "Start an AI sourcing job from the Staplehire CLI, poll it, and fetch prospects for a role."
+sidebarTitle: "Source candidates"
+---
+
+Start a sourcing job for a role, poll the async job, then list matched prospects as JSON.
+
+```bash
+JOB_ID=$(staplehire sourcing start <roleId> --prompt "Backend engineers, seed-stage, remote" | jq -r '.job.id')
+staplehire jobs poll "$JOB_ID"
+staplehire sourcing prospects <roleId>
+```
+
+## Quickstart
+
+Create a role first if you do not already have a `roleId`.
+
+```bash
+ROLE_ID=$(staplehire roles create --jd "Senior backend engineer. TypeScript, remote." | jq -r '.role.id')
+JOB_ID=$(staplehire sourcing start "$ROLE_ID" --prompt "Backend engineers, seed-stage, remote" | jq -r '.job.id')
+staplehire jobs poll "$JOB_ID"
+staplehire sourcing prospects "$ROLE_ID" | jq '.prospects[]'
+```
+
+Example `sourcing start` output:
+
+```json
+{
+  "job": {
+    "id": "job_...",
+    "type": "source_role_prospects",
+    "status": "pending",
+    "role_id": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "created": true
+}
+```
+
+Example prospects output:
+
+```json
+{
+  "prospects": [
+    {
+      "name": "Jordan Lee",
+      "email": "jordan@example.com",
+      "linkedin_url": "https://linkedin.com/in/...",
+      "fit_score": 0.82
+    }
+  ]
+}
+```
+
+## Parameters
+
+| Command | Parameter | Required | Description |
+| --- | --- | --- | --- |
+| `sourcing start` | `<roleId>` | Yes | Role to source against |
+| `sourcing start` | `--prompt <text>` | No | Extra sourcing instructions |
+| `sourcing start` | `--force` | No | Start a fresh job when allowed |
+| `sourcing prospects` | `<roleId>` | Yes | Role whose prospects should be listed |
+
+## Examples
+
+### Source remote backend engineers
+
+```bash
+staplehire sourcing start <roleId> --prompt "Backend engineers, seed-stage, remote"
+```
+
+### Source candidates and keep only strong fits
+
+```bash
+staplehire sourcing prospects <roleId> | jq '.prospects[] | select(.fit_score >= 0.8)'
+```
+
+### Avoid duplicate sourcing jobs
+
+If `created` is `false`, a job is already in flight. Poll the returned `job.id` instead of starting another job.
+
+```bash
+JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
+staplehire jobs poll "$JOB_ID"
+```
+
+## Common errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `NotFoundError` | The role ID does not exist | Run `staplehire roles list` and use a real role ID |
+| `AuthenticationError` | No API key is configured | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+| Exit code `9` | Poll timed out | Increase `--timeout` or check the job later |
+
+## FAQ
+
+### Does sourcing return results immediately?
+
+No. Sourcing is async. Call `jobs poll` before reading prospects.
+
+### Can I source with a custom prompt?
+
+Yes. Pass `--prompt` to `sourcing start`.
+
+### What is `sourcing list`?
+
+It is an alias for `sourcing prospects`.
+
+Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)

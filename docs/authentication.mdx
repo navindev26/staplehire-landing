@@ -1,0 +1,91 @@
+---
+title: "Authenticate the Staplehire CLI"
+description: "Log in to the Staplehire CLI, set STAPLEHIRE_KEY, and verify your organization with whoami."
+sidebarTitle: "Authentication"
+---
+
+Use `staplehire login` for local development, or set `STAPLEHIRE_KEY` for agents, scripts, and CI.
+
+```bash
+staplehire login
+staplehire whoami
+```
+
+## Quickstart
+
+`login` opens your browser, completes PKCE OAuth, validates the key, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
+
+```bash
+staplehire login
+```
+
+Verify the active key and organization:
+
+```bash
+staplehire whoami
+```
+
+Example output:
+
+```json
+{
+  "user": { "id": "usr_...", "email": "you@company.com" },
+  "organization": { "id": "org_...", "name": "Acme Corp" }
+}
+```
+
+## API key priority
+
+The CLI resolves your API key in this order.
+
+| Priority | Source | Example |
+| --- | --- | --- |
+| 1 | `--api-key` flag | `staplehire --api-key sh_live_xxx roles list` |
+| 2 | `STAPLEHIRE_KEY` env var | `export STAPLEHIRE_KEY=sh_live_xxx` |
+| 3 | `.env` in cwd | Written by `staplehire login` |
+
+## Use an API key in CI
+
+Do not run browser login in automation. Create an API key in Staplehire settings and expose it as `STAPLEHIRE_KEY`.
+
+```bash
+export STAPLEHIRE_KEY=sh_live_xxx
+staplehire doctor -q
+staplehire whoami | jq '.organization.id'
+```
+
+## Log out
+
+```bash
+staplehire logout
+```
+
+Example output:
+
+```json
+{ "logged_out": true, "env_path": "/path/to/project/.env", "key_removed_from_env": true }
+```
+
+## Common errors
+
+| Error | Fix |
+| --- | --- |
+| `AuthenticationError` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+| `PermissionError` | Confirm the key belongs to the right organization |
+| `ValidationError` | Check the command flags and field names |
+
+## FAQ
+
+### Where does `staplehire login` store credentials?
+
+It writes `STAPLEHIRE_KEY` to `.env` in the current directory.
+
+### Can I pass an API key for one command?
+
+Yes. Use `--api-key` before the subcommand.
+
+### Is `staplehire init` still supported?
+
+Yes, but it is a deprecated alias for `staplehire login`.
+
+Related: [Install the Staplehire CLI](/installation) · [Use the Staplehire CLI in CI](/use-staplehire-cli-in-ci) · [CLI errors](/cli-errors)

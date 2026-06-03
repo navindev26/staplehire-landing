@@ -1,43 +1,84 @@
 ---
-title: "Installation"
-description: "Install the CLI, log in, and verify your session"
+title: "Install the Staplehire CLI"
+description: "Install @staplehire/staplehire-cli, verify the staplehire binary, and run your first health check."
+sidebarTitle: "Installation"
 ---
 
-## Prerequisites
-
-- **Node.js 18+** and npm
-- A [Staplehire](https://staplehire.com) account (browser login for `staplehire login`)
-
-## Install
+Install the Staplehire CLI globally with npm, then verify the `staplehire` binary before logging in.
 
 ```bash
 npm install -g @staplehire/staplehire-cli
 staplehire --version
+staplehire doctor
 ```
 
-## Authenticate
+## Prerequisites
+
+| Requirement | Notes |
+| --- | --- |
+| Node.js | Node.js 18 or newer |
+| npm | Used for global installation |
+| Staplehire account | Required for `staplehire login` |
+
+## Install with npm
 
 ```bash
-staplehire login
+npm install -g @staplehire/staplehire-cli
 ```
 
-Opens a browser and stores credentials locally.
-
-## Verify
+The package installs the `staplehire` binary.
 
 ```bash
-staplehire roles list
-staplehire roles list --json   # for agents/scripts
+staplehire --version
 ```
 
-## Agent skills (optional)
+## Install from source
+
+Use source installation only when contributing to the CLI.
 
 ```bash
-staplehire skills install
+git clone https://github.com/staplehire/staplehire-cli.git
+cd staplehire-cli
+npm install
+npm run build
+node bin/staplehire.mjs --version
 ```
 
-See [AI editors & skills](/ai-agents).
+## Verify the install
 
-<Note>
-  Auth errors? Run `staplehire login` again.
-</Note>
+`doctor` checks the CLI version, API key source, API URL, and `GET /v1/me` API roundtrip.
+
+```bash
+staplehire doctor
+staplehire doctor -q
+```
+
+Example JSON output:
+
+```json
+{
+  "ok": true,
+  "checks": [
+    { "name": "CLI Version", "status": "pass", "message": "v0.6.0 (latest)" },
+    { "name": "API Key", "status": "pass", "message": "sh_live_...xxxx (source: .env)" },
+    { "name": "API URL", "status": "pass", "message": "https://api.staplehire.com" },
+    { "name": "API Validation", "status": "pass", "message": "GET /v1/me OK (142ms) - Acme Corp" }
+  ]
+}
+```
+
+## FAQ
+
+### What package do I install?
+
+Install `@staplehire/staplehire-cli`.
+
+### What binary does the package provide?
+
+The binary is `staplehire`.
+
+### Should CI run `staplehire login`?
+
+No. Set `STAPLEHIRE_KEY` as a secret and use `staplehire doctor -q` to verify it.
+
+Related: [Authenticate the Staplehire CLI](/authentication) · [Use the Staplehire CLI in CI](/use-staplehire-cli-in-ci) · [Command reference](/commands)

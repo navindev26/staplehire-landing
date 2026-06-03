@@ -1,0 +1,88 @@
+---
+title: "Use the Staplehire CLI in CI"
+description: "Run Staplehire CLI commands in GitHub Actions or other CI systems with STAPLEHIRE_KEY and JSON output."
+sidebarTitle: "Use in CI"
+---
+
+Set `STAPLEHIRE_KEY` as a CI secret, install the CLI, and use `-q` or piped JSON for automation.
+
+```yaml
+env:
+  STAPLEHIRE_KEY: ${{ secrets.STAPLEHIRE_KEY }}
+steps:
+  - run: npm install -g @staplehire/staplehire-cli
+  - run: staplehire doctor -q
+```
+
+## Quickstart
+
+Do not use `staplehire login` in CI. Browser login is for local development.
+
+```bash
+npm install -g @staplehire/staplehire-cli
+staplehire doctor -q
+staplehire whoami | jq '.organization.id'
+```
+
+## GitHub Actions example
+
+```yaml
+name: Staplehire CLI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  staplehire:
+    runs-on: ubuntu-latest
+    env:
+      STAPLEHIRE_KEY: ${{ secrets.STAPLEHIRE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install -g @staplehire/staplehire-cli
+      - run: staplehire doctor -q
+      - run: |
+          staplehire roles create --jd "On-call SRE. ${GITHUB_REPOSITORY} deploys." \
+            | jq -e '.role.id'
+```
+
+## Environment variables
+
+| Variable | Description |
+| --- | --- |
+| `STAPLEHIRE_KEY` | API key, for example `sh_live_...` or `sh_test_...` |
+| `STAPLEHIRE_API_URL` | Optional API gateway override |
+| `STAPLEHIRE_APP_URL` | Optional dashboard URL for `login` and `open` |
+
+## Machine-readable output
+
+Use `-q`, `--json`, or a pipe when scripts need JSON without human status lines.
+
+```bash
+staplehire doctor -q | jq '.ok'
+staplehire roles list | jq '.roles[].id'
+```
+
+## Common errors
+
+| Error | Cause | Fix |
+| --- | --- | --- |
+| `AuthenticationError` | Secret is missing or empty | Add `STAPLEHIRE_KEY` to CI secrets |
+| `PermissionError` | Key lacks organization access | Create a key for the correct organization |
+| Exit code `8` | Bad CLI arguments | Run `staplehire commands` locally and pass required flags |
+
+## FAQ
+
+### Should CI run `staplehire login`?
+
+No. `login` opens a browser. Use `STAPLEHIRE_KEY` instead.
+
+### Should I use `--json` or `-q`?
+
+Use `-q` for JSON-only output when a command may print human status in an interactive context.
+
+### Can CI create roles and candidates?
+
+Yes, if the API key has permission and the command includes all required flags.
+
+Related: [Authenticate the Staplehire CLI](/authentication) · [Command reference](/commands) · [CLI errors](/cli-errors)
