@@ -3,15 +3,13 @@ title: "Commands"
 description: "Command reference for the full hiring loop"
 ---
 
-Commands follow `staplehire <resource> <action>`. Add **`--json`** when piping output to an agent or script.
+Commands follow `staplehire <resource> <action>`. Add **`--json`** when piping to an agent or script.
 
 <Tip>
-  Run `staplehire --help` or `staplehire <resource> --help` for the live command tree installed with your version.
+  Run `staplehire --help` or `staplehire <resource> --help` for the command tree for your installed version.
 </Tip>
 
 ## Source
-
-Create a role from a job description, start sourcing, and list prospects:
 
 ```bash
 staplehire login
@@ -22,19 +20,15 @@ staplehire sourcing prospects <roleId> --json
 
 ## Agent inbox
 
-Each role has a virtual inbox. List messages and triage applications:
-
 ```bash
 staplehire roles list --json
 staplehire inbox messages <roleId> --json
 staplehire inbox triage <roleId> --surface-above 7.5
 ```
 
-Role inboxes use addresses like `hire+<role>@in.staplehire.com` so applications land in the right pipeline.
+Role inboxes use `hire+<role>@in.staplehire.com`.
 
 ## Investigate
-
-Enrich a candidate, run research, and read screening results before you interview:
 
 ```bash
 staplehire candidates enrich <candidateId>
@@ -44,8 +38,6 @@ staplehire candidates screening-result <candidateId> --json
 
 ## Interview
 
-Create an interview design, send an invite, and list sessions:
-
 ```bash
 staplehire designs create <roleId> --brief "SDR screen"
 staplehire candidates send-interview <candidateId> --design <designId>
@@ -53,8 +45,6 @@ staplehire sessions list <roleId> --json
 ```
 
 ## Hire
-
-Preview and send agent mail from the terminal:
 
 ```bash
 staplehire candidates send-email <candidateId> \
@@ -64,8 +54,6 @@ staplehire candidates send-email <candidateId> \
 ```
 
 ## JSON output
-
-When stdout is not a TTY or you pass `--json`, responses are structured records (roles, prospects, inbox messages, screening scores, sessions) that agents can parse without scraping the dashboard.
 
 ```bash
 staplehire sourcing prospects rol_abc123 --json | jq '.prospects[] | select(.score >= 8)'

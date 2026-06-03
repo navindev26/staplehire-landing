@@ -1,7 +1,8 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Staplehire",
+  "name": "Staplehire CLI",
+  "description": "Install, authenticate, and run the Staplehire CLI from your terminal or AI editor.",
   "colors": {
     "primary": "#FF6701",
     "light": "#FF7A1A",
@@ -15,18 +16,18 @@
   "navbar": {
     "links": [
       {
-        "label": "Product",
-        "href": "https://staplehire.com"
+        "label": "npm",
+        "href": "https://www.npmjs.com/package/@staplehire/staplehire-cli"
       },
       {
-        "label": "Support",
-        "href": "mailto:hello@staplehire.com"
+        "label": "Staplehire",
+        "href": "https://staplehire.com"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Get started",
-      "href": "https://staplehire.com"
+      "label": "Install CLI",
+      "href": "/installation"
     }
   },
   "footer": {
@@ -38,24 +39,22 @@
     "options": ["copy", "view", "chatgpt", "claude", "cursor", "mcp", "vscode"],
     "display": "header"
   },
+  "redirects": [
+    { "source": "/quickstart", "destination": "/installation", "permanent": true },
+    { "source": "/cli/overview", "destination": "/", "permanent": true },
+    { "source": "/cli/installation", "destination": "/installation", "permanent": true },
+    { "source": "/cli/commands", "destination": "/commands", "permanent": true },
+    { "source": "/cli/ai-agents", "destination": "/ai-agents", "permanent": true }
+  ],
   "navigation": {
     "groups": [
       {
-        "group": "Getting Started",
-        "pages": ["index", "quickstart"]
-      },
-      {
-        "group": "Staplehire CLI",
+        "group": "CLI",
         "icon": {
           "name": "terminal",
           "library": "lucide"
         },
-        "pages": [
-          "cli/overview",
-          "cli/installation",
-          "cli/commands",
-          "cli/ai-agents"
-        ]
+        "pages": ["index", "installation", "commands", "ai-agents"]
       }
     ]
   }

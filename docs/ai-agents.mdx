@@ -1,0 +1,41 @@
+---
+title: "AI editors & skills"
+description: "Use the Staplehire CLI from Cursor, Claude Code, Codex, and other agents"
+---
+
+## Install skills
+
+```bash
+staplehire skills install
+```
+
+Copies Staplehire skills into supported editors so agents discover commands and use `--json` for automation.
+
+## Supported editors
+
+| Editor | Setup |
+| --- | --- |
+| **Cursor** | `skills install`; run `staplehire` in agent terminal |
+| **Claude Code** | Command tree + pipe JSON into workflows |
+| **OpenAI Codex** | Same CLI as the Staplehire app |
+| **OpenClaw** | Skills + gateway (Telegram, Discord, etc.) |
+| **Hermes Agent** | Long-running hiring workflows |
+| **Pi** | Terminal harness + npm skills |
+
+## Agent workflow
+
+1. `staplehire login`
+2. `staplehire roles list --json`
+3. Stage commands with `--json` (source → inbox → investigate → interview → hire)
+4. Use dashboard URLs from JSON when a human must review
+
+<Warning>
+  Do not guess role or candidate IDs — list or create via the CLI first.
+</Warning>
+
+## Search this docs site (MCP)
+
+- **Search:** `https://staplehire.mintlify.app/mcp` (or your custom domain + `/mcp` after setup)
+- **Edit docs (Admin MCP):** `https://mcp.mintlify.com`
+
+Cursor: **Cmd+Shift+P** → **Open MCP settings** → add URL → reload.

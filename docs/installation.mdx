@@ -1,0 +1,43 @@
+---
+title: "Installation"
+description: "Install the CLI, log in, and verify your session"
+---
+
+## Prerequisites
+
+- **Node.js 18+** and npm
+- A [Staplehire](https://staplehire.com) account (browser login for `staplehire login`)
+
+## Install
+
+```bash
+npm install -g @staplehire/staplehire-cli
+staplehire --version
+```
+
+## Authenticate
+
+```bash
+staplehire login
+```
+
+Opens a browser and stores credentials locally.
+
+## Verify
+
+```bash
+staplehire roles list
+staplehire roles list --json   # for agents/scripts
+```
+
+## Agent skills (optional)
+
+```bash
+staplehire skills install
+```
+
+See [AI editors & skills](/ai-agents).
+
+<Note>
+  Auth errors? Run `staplehire login` again.
+</Note>

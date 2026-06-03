@@ -1,23 +1,42 @@
 ---
-title: "Introduction"
-description: "Documentation for Staplehire — hiring agents and the Staplehire CLI"
+title: "Staplehire CLI"
+description: "Recruiting primitives for terminals and AI agents"
 ---
 
-Staplehire is an AI-native hiring platform: roles, sourcing, inbox triage, screening, interviews, and outreach — built for humans and for agents.
+The Staplehire CLI (`staplehire`) runs the full hiring loop from your terminal or editor — **source, inbox, investigate, interview, hire** — with **JSON output** when piped and readable output in an interactive shell.
 
-Use the **Staplehire CLI** from your terminal or editor to run the same hiring loop as the dashboard, with JSON output for automation.
+```bash
+npm install -g @staplehire/staplehire-cli
+staplehire login
+staplehire roles list --json
+```
+
+## What you can do
+
+| Stage | CLI focus |
+| --- | --- |
+| **Source** | Create roles from a JD, start sourcing, list prospects |
+| **Inbox** | List role inboxes, triage applications, surface strong fits |
+| **Investigate** | Enrich candidates, run research, read screening results |
+| **Interview** | Create interview designs, send invites, list sessions |
+| **Hire** | Send agent mail and move candidates through the pipeline |
+
+## Output modes
+
+- **Interactive terminal** — tables and prompts for humans.
+- **Agents / scripts** — `--json` or pipe stdout for machine-readable records.
 
 <CardGroup cols={2}>
-  <Card title="CLI quickstart" icon="rocket" href="/quickstart">
-    Install, log in, and list roles in minutes.
+  <Card title="Installation" icon="download" href="/installation">
+    Install, log in, and verify your session.
   </Card>
-  <Card title="CLI overview" icon="terminal" href="/cli/overview">
-    Source, inbox, investigate, interview, and hire from the shell.
+  <Card title="Commands" icon="list" href="/commands">
+    End-to-end examples for each hiring stage.
   </Card>
-  <Card title="Product site" icon="globe" href="https://staplehire.com">
-    See the Staplehire hiring agent and dashboard.
+  <Card title="AI editors" icon="bot" href="/ai-agents">
+    Skills for Cursor, Claude Code, Codex, and more.
   </Card>
-  <Card title="npm package" icon="box" href="https://www.npmjs.com/package/@staplehire/staplehire-cli">
-    `@staplehire/staplehire-cli` on npm.
+  <Card title="npm" icon="box" href="https://www.npmjs.com/package/@staplehire/staplehire-cli">
+  `@staplehire/staplehire-cli`
   </Card>
 </CardGroup>
