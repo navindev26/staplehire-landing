@@ -4,6 +4,11 @@
   "framework": "vite",
   "redirects": [
     {
+      "source": "/docs",
+      "destination": "/docs/",
+      "permanent": true
+    },
+    {
       "source": "/login",
       "destination": "https://app.staplehire.com/login",
       "permanent": false
