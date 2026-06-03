@@ -1,42 +1,61 @@
 ---
 title: "Staplehire CLI"
-description: "Recruiting primitives for terminals and AI agents"
+description: "Run hiring workflows from the terminal with JSON output for humans, AI agents, and CI/CD."
+sidebarTitle: "Overview"
 ---
 
-The Staplehire CLI (`staplehire`) runs the full hiring loop from your terminal or editor — **source, inbox, investigate, interview, hire** — with **JSON output** when piped and readable output in an interactive shell.
+The Staplehire CLI (`staplehire`) lets you create roles, source candidates, run research, send interviews, and automate hiring workflows from a terminal.
 
 ```bash
 npm install -g @staplehire/staplehire-cli
 staplehire login
-staplehire roles list --json
+staplehire roles create --jd "Senior backend engineer. TypeScript, remote."
 ```
 
-## What you can do
+**Package:** `@staplehire/staplehire-cli`\
+**Binary:** `staplehire`
 
-| Stage | CLI focus |
-| --- | --- |
-| **Source** | Create roles from a JD, start sourcing, list prospects |
-| **Inbox** | List role inboxes, triage applications, surface strong fits |
-| **Investigate** | Enrich candidates, run research, read screening results |
-| **Interview** | Create interview designs, send invites, list sessions |
-| **Hire** | Send agent mail and move candidates through the pipeline |
-
-## Output modes
-
-- **Interactive terminal** — tables and prompts for humans.
-- **Agents / scripts** — `--json` or pipe stdout for machine-readable records.
+## Start here
 
 <CardGroup cols={2}>
-  <Card title="Installation" icon="download" href="/installation">
-    Install, log in, and verify your session.
+  <Card title="Install the Staplehire CLI" icon="download" href="/installation">
+    Install the package, verify the binary, and run `staplehire doctor`.
   </Card>
-  <Card title="Commands" icon="list" href="/commands">
-    End-to-end examples for each hiring stage.
+
+  <Card title="Authenticate the Staplehire CLI" icon="key" href="/authentication">
+    Log in locally or set `STAPLEHIRE_KEY` for agents and CI.
   </Card>
-  <Card title="AI editors" icon="bot" href="/ai-agents">
-    Skills for Cursor, Claude Code, Codex, and more.
+
+  <Card title="Source candidates with the Staplehire CLI" icon="search" href="/source-candidates-cli">
+    Start a sourcing job, poll it, and fetch prospects as JSON.
   </Card>
-  <Card title="npm" icon="box" href="https://www.npmjs.com/package/@staplehire/staplehire-cli">
-  `@staplehire/staplehire-cli`
+
+  <Card title="Send an interview with the Staplehire CLI" icon="send" href="/send-interview-cli">
+    Create an interview design and invite a candidate.
   </Card>
 </CardGroup>
+
+## Common tasks
+
+| Task | Page |
+| --- | --- |
+| Install the CLI | [Install the Staplehire CLI](/installation) |
+| Log in or use an API key | [Authenticate the Staplehire CLI](/authentication) |
+| Create a role from a job description | [Create a role with the Staplehire CLI](/create-role-cli) |
+| Add a candidate to a role | [Add a candidate with the Staplehire CLI](/add-candidate-cli) |
+| Source prospects | [Source candidates with the Staplehire CLI](/source-candidates-cli) |
+| Enrich a candidate with research | [Enrich a candidate with the Staplehire CLI](/enrich-candidate-cli) |
+| Poll async jobs | [Poll Staplehire CLI jobs](/poll-agent-jobs) |
+| Fix command failures | [Staplehire CLI errors](/cli-errors) |
+| Automate from editors | [Use the Staplehire CLI with AI agents](/ai-agents) |
+
+## Output contract
+
+Every data command writes JSON to stdout. Errors are structured JSON on stderr with stable exit codes, which makes the CLI safe for scripts and AI agents.
+
+```bash
+staplehire roles list | jq '.roles[].id'
+staplehire doctor -q | jq '.checks[] | select(.status != "pass")'
+```
+
+Related: [Command reference](/commands) · [AI agents](/ai-agents) · [CLI errors](/cli-errors)
