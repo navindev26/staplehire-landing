@@ -1,0 +1,59 @@
+---
+title: "Installation"
+description: "Install the CLI, log in, and verify your session"
+---
+
+## Prerequisites
+
+- **Node.js 18+** and npm
+- A [Staplehire](https://staplehire.com) account (browser login is used for auth)
+
+## Install
+
+Install the CLI globally:
+
+```bash
+npm install -g @staplehire/staplehire-cli
+```
+
+Verify the binary:
+
+```bash
+staplehire --version
+```
+
+## Authenticate
+
+Log in with your Staplehire account. This opens a browser window and stores credentials locally for subsequent commands:
+
+```bash
+staplehire login
+```
+
+## Verify
+
+List your roles to confirm the session works:
+
+```bash
+staplehire roles list
+```
+
+For agents and scripts, request JSON:
+
+```bash
+staplehire roles list --json
+```
+
+## Agent skills (optional)
+
+Install Staplehire agent skills into supported editors so your agent knows hiring commands and conventions:
+
+```bash
+staplehire skills install
+```
+
+See [AI editors & skills](/cli/ai-agents) for Cursor, Claude Code, Codex, and other setups.
+
+<Note>
+  The CLI mirrors dashboard primitives. If a command fails with auth errors, run `staplehire login` again.
+</Note>

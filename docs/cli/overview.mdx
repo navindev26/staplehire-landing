@@ -1,0 +1,42 @@
+---
+title: "Overview"
+description: "Recruiting primitives for terminals and AI agents"
+---
+
+The Staplehire CLI (`staplehire`) exposes the same hiring loop as the Staplehire dashboard — roles, sourcing, inbox triage, candidate research, interviews, and outreach — as stable commands with **JSON output when piped** and human-readable output in an interactive shell.
+
+Use it from your terminal or wire it into AI editors (Cursor, Claude Code, Codex, OpenClaw, Hermes, Pi) so agents can source, screen, interview, and hire without leaving your repo.
+
+## What you can do
+
+| Stage | CLI focus |
+| --- | --- |
+| **Source** | Create roles from a JD, start sourcing, list prospects |
+| **Inbox** | List role inboxes, triage applications, surface strong fits |
+| **Investigate** | Enrich candidates, run research, read screening results |
+| **Interview** | Create interview designs, send invites, list sessions |
+| **Hire** | Send agent mail and move candidates through the pipeline |
+
+## Output modes
+
+- **Interactive terminal** — formatted tables and prompts for humans.
+- **Automation / agents** — append `--json` (or pipe stdout) for machine-readable records your agent can rank, filter, and act on.
+
+<CardGroup cols={2}>
+  <Card title="Install & login" icon="download" href="/cli/installation">
+    Install globally, authenticate, and verify your session.
+  </Card>
+  <Card title="Command reference" icon="list" href="/cli/commands">
+    End-to-end examples for each stage of the hiring loop.
+  </Card>
+  <Card title="AI editors" icon="bot" href="/cli/ai-agents">
+    Install skills and discover commands from Cursor and other agents.
+  </Card>
+  <Card title="npm package" icon="box" href="https://www.npmjs.com/package/@staplehire/staplehire-cli">
+    View releases on npm.
+  </Card>
+</CardGroup>
+
+<Tip>
+  New to Staplehire? Start with [Installation](/cli/installation), then run through [Commands](/cli/commands) for a full loop on one role.
+</Tip>

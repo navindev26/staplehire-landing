@@ -1,0 +1,52 @@
+---
+title: "Quickstart"
+description: "Install the Staplehire CLI and run your first hiring commands"
+---
+
+Get from zero to a working CLI session in a few minutes. For the full hiring loop (source → inbox → interview → hire), see the [CLI command reference](/cli/commands).
+
+## Prerequisites
+
+- Node.js 18+ and npm
+- A Staplehire account
+
+## Get started
+
+<Steps>
+  <Step title="Install">
+    Install the CLI globally:
+
+    ```bash
+    npm install -g @staplehire/staplehire-cli
+    ```
+  </Step>
+  <Step title="Log in">
+    Authenticate with your Staplehire account (opens the browser):
+
+    ```bash
+    staplehire login
+    ```
+  </Step>
+  <Step title="List roles">
+    Confirm the session and inspect roles as JSON:
+
+    ```bash
+    staplehire roles list --json
+    ```
+  </Step>
+</Steps>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="CLI overview" icon="terminal" href="/cli/overview">
+    What the CLI does and how JSON output works.
+  </Card>
+  <Card title="AI editors" icon="bot" href="/cli/ai-agents">
+    Install skills for Cursor, Claude Code, and more.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Need help? Email [hello@staplehire.com](mailto:hello@staplehire.com) or visit [staplehire.com](https://staplehire.com).
+</Tip>

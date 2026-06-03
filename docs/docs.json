@@ -1,0 +1,62 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Staplehire",
+  "colors": {
+    "primary": "#FF6701",
+    "light": "#FF7A1A",
+    "dark": "#E55C00"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/favicon.svg",
+    "dark": "/favicon.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Product",
+        "href": "https://staplehire.com"
+      },
+      {
+        "label": "Support",
+        "href": "mailto:hello@staplehire.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get started",
+      "href": "https://staplehire.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/navindev26/staplehire-landing"
+    }
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude", "cursor", "mcp", "vscode"],
+    "display": "header"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": ["index", "quickstart"]
+      },
+      {
+        "group": "Staplehire CLI",
+        "icon": {
+          "name": "terminal",
+          "library": "lucide"
+        },
+        "pages": [
+          "cli/overview",
+          "cli/installation",
+          "cli/commands",
+          "cli/ai-agents"
+        ]
+      }
+    ]
+  }
+}
