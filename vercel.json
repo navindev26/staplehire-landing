@@ -5,7 +5,12 @@
   "redirects": [
     {
       "source": "/docs",
-      "destination": "/docs/",
+      "destination": "/docs/index",
+      "permanent": true
+    },
+    {
+      "source": "/docs/",
+      "destination": "/docs/index",
       "permanent": true
     },
     {
@@ -35,10 +40,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/docs",
-      "destination": "https://staplehire.mintlify.dev/docs"
-    },
     {
       "source": "/docs/:match*",
       "destination": "https://staplehire.mintlify.dev/docs/:match*"
