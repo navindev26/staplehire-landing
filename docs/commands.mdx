@@ -1,87 +1,140 @@
 ---
-title: "Commands"
-description: "Command reference for the hiring loop"
+title: "Staplehire CLI command reference"
+description: "Every Staplehire CLI command for roles, candidates, sourcing, interviews, jobs, authentication, and utility workflows."
+sidebarTitle: "Command reference"
 ---
 
-Commands follow `staplehire <resource> <action>`. Add **`--json`** when piping to an agent or script.
+Use `staplehire <resource> <action>` to run hiring workflows from the terminal. Data commands return JSON on stdout.
+
+```bash
+staplehire commands | jq '.subcommands[].name'
+```
 
 <Tip>
-  Run `staplehire commands` for the machine-readable command tree for your installed version, or `staplehire <resource> --help` for a subcommand.
+  Run `staplehire commands` for the live machine-readable command tree for your installed CLI version.
 </Tip>
 
-## Discovery & health
+## Authentication commands
+
+| Command | What it does |
+| --- | --- |
+| `staplehire login` | Browser PKCE login; writes `STAPLEHIRE_KEY` to `.env` |
+| `staplehire logout` | Removes `STAPLEHIRE_KEY` from `.env` |
+| `staplehire whoami` | Verifies the current API key and returns user and organization context |
+| `staplehire init` | Deprecated alias for `login` |
+| `staplehire me` | Deprecated alias for `whoami` |
+
+## Roles commands
 
 ```bash
-staplehire doctor
-staplehire whoami --json
-staplehire search --q "alex@company.com" --json
+staplehire roles create --jd <text|@file|->
+staplehire roles list [--status <s>] [--q <text>] [--limit <n>]
+staplehire roles get <roleId>
+staplehire roles candidates <roleId> [--stage-id <id>] [--source <s>]
 ```
 
-## Source
+See [Create a role with the Staplehire CLI](/create-role-cli).
+
+## Candidate commands
 
 ```bash
-staplehire roles create --jd @senior-sdr.md
-staplehire sourcing start <roleId> \
-  --search "Senior SDR, NYC fintech" \
-  --filter "Must have 3+ years outbound" \
-  --experience-years-min 3
-staplehire sourcing prospects <roleId> --json
-staplehire sourcing runs <roleId> --json
-staplehire jobs poll <jobId>
-```
-
-`roles create` returns `apply_url` on **app.staplehire.com** (public apply page for the role).
-
-## Pipeline
-
-```bash
-staplehire roles list --json
-staplehire roles get <roleId> --json
-staplehire roles candidates <roleId> --json
-staplehire candidates get <candidateId> --json
-staplehire candidates move <candidateId> --stage-id <stageId>
-```
-
-`candidates get` includes interview sessions, signed `recording_url` values, and `urls.review_url` on **app.staplehire.com** (opens the applicant drawer with session context).
-
-## Investigate
-
-```bash
-staplehire candidates enrich <candidateId>
+staplehire candidates list [--role-id <id>] [--email <e>] [--q <text>] [--limit <n>]
+staplehire candidates get <candidateId>
+staplehire candidates create <roleId> --email <e> [--name <n>]
+staplehire candidates move <candidateId> --stage-id <id>
+staplehire candidates enrich <candidateId> [--prompt <text>] [--force]
 staplehire candidates research <candidateId>
-staplehire jobs list --role-id <roleId> --json
-staplehire jobs poll <jobId>
-staplehire candidates screening-result <candidateId> --json
+staplehire candidates screening-result <candidateId>
+staplehire candidates send-interview <candidateId> --design <designId> [--mode email|link]
+staplehire candidates interview-link <candidateId> --design <designId>
+staplehire candidates send-email <candidateId> --subject <s> --title <t> --body <text|@file|->
 ```
 
-## Interview
+See [Add a candidate with the Staplehire CLI](/add-candidate-cli), [Enrich a candidate with the Staplehire CLI](/enrich-candidate-cli), and [Send an interview with the Staplehire CLI](/send-interview-cli).
+
+## Sourcing commands
 
 ```bash
-staplehire designs create <roleId> --brief "SDR async screen"
-staplehire designs list <roleId> --json
-staplehire candidates send-interview <candidateId> --design <designId>
-staplehire candidates interview-link <candidateId> --design <designId> --json
-staplehire sessions list <roleId> --json
+staplehire sourcing start <roleId> [--prompt <text>] [--force]
+staplehire sourcing prospects <roleId>
 ```
 
-Interview links use **app.staplehire.com/apply/…** (short token URLs when configured).
+`sourcing list` is an alias for `sourcing prospects`.
 
-## Hire
+See [Source candidates with the Staplehire CLI](/source-candidates-cli).
+
+## Interview design commands
 
 ```bash
-staplehire candidates send-email <candidateId> \
-  --subject "Next steps" \
-  --title "Quick intro" \
-  --body @message.md
+staplehire designs create <roleId> [--type <type>] [--brief <text>] [--round-title <title>]
+staplehire designs list <roleId>
+staplehire designs get <designId>
 ```
 
-## JSON output
+`interview-design` is a deprecated alias for `designs`.
+
+## Interview session commands
 
 ```bash
-staplehire sourcing prospects <roleId> --json | jq '.prospects[] | select(.fit_score >= 8)'
-staplehire candidates get <candidateId> --json | jq '.candidate.urls.review_url'
+staplehire sessions list <roleId> [--candidate-email <email>]
 ```
 
-<Warning>
-  Do not guess role or candidate IDs — list or create via the CLI first. Prefer `urls.*` from API JSON over constructing dashboard links by hand.
-</Warning>
+`interview-sessions` is a deprecated alias for `sessions`.
+
+## Stage commands
+
+```bash
+staplehire stages create <roleId> --name <n> --position <p>
+staplehire stages list <roleId>
+staplehire stages candidates <roleId> <stageId>
+```
+
+## Job commands
+
+```bash
+staplehire jobs get <jobId>
+staplehire jobs list [--role-id <id>] [--candidate-id <id>] [--type <t>] [--status <s>] [--include-history]
+staplehire jobs poll <jobId> [--interval <ms>] [--timeout <ms>]
+```
+
+See [Poll Staplehire CLI jobs](/poll-agent-jobs).
+
+## Utility commands
+
+| Command | Description |
+| --- | --- |
+| `staplehire doctor` | Diagnose CLI version, API key, API URL, and API reachability |
+| `staplehire open [path]` | Open the Staplehire dashboard |
+| `staplehire docs` | Open documentation in the browser |
+| `staplehire update` | Check for CLI updates on npm |
+| `staplehire commands` | Print the machine-readable command tree |
+| `staplehire skills install` | Install the agent skill into Cursor, Claude, and Codex roots |
+
+## Global options
+
+| Flag | Description |
+| --- | --- |
+| `--api-key <key>` | Override `STAPLEHIRE_KEY` for this invocation |
+| `--api-url <url>` | Override API gateway base URL |
+| `--app-url <url>` | Override dashboard URL for `login` and `open` |
+| `--json` | Force JSON output in an interactive terminal |
+| `-q, --quiet` | Suppress human messages; implies `--json` |
+| `-h, --help` | Show help |
+| `-v, --version` | Print version and exit |
+| `--profile <name>` | Reserved for multi-profile auth |
+
+## Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `1` | Generic or internal error |
+| `2` | Authentication, usually `401` |
+| `3` | Validation, usually `400` |
+| `4` | Not found, usually `404` |
+| `5` | Conflict, usually `409` |
+| `6` | Permission, usually `403` |
+| `7` | Upstream, usually `502` |
+| `8` | CLI usage or bad arguments |
+| `9` | `jobs poll` timeout |
+
+Related: [CLI errors](/cli-errors) · [Use the Staplehire CLI with AI agents](/ai-agents)

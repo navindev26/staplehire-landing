@@ -1,7 +1,16 @@
 ---
-title: "AI editors & skills"
-description: "Use the Staplehire CLI from Cursor, Claude Code, Codex, and other agents"
+title: "Use the Staplehire CLI with AI agents"
+description: "Install Staplehire agent skills and run non-interactive CLI workflows from Cursor, Claude Code, Codex, and CI."
+sidebarTitle: "AI agents"
 ---
+
+Install the Staplehire skill so AI agents can discover commands, pass required flags, and consume JSON output safely.
+
+```bash
+staplehire skills install
+staplehire commands | jq '.subcommands[].name'
+staplehire doctor -q
+```
 
 ## Install skills
 
@@ -9,35 +18,64 @@ description: "Use the Staplehire CLI from Cursor, Claude Code, Codex, and other 
 staplehire skills install
 ```
 
-Copies the **`staplehire`** agent skill from [`@staplehire/staplehire-cli`](https://github.com/staplehire/staplehire-cli) into supported editors. Agents load it before running `staplehire` so they use `--json`, poll async `jobs`, and read `urls` from responses instead of guessing IDs or hosts.
+`skills install` installs the `staplehire-cli` skill into supported agent roots.
+
+```json
+{
+  "installed": true,
+  "targets": [
+    { "agent": "cursor", "path": "~/.cursor/skills/staplehire", "method": "symlink" }
+  ]
+}
+```
+
+Use `--copy` to copy files instead of symlinking, or `--dry-run` to preview changes.
+
+## Agent workflow
+
+1. Install the skill with `staplehire skills install`.
+2. Discover commands with `staplehire commands`.
+3. Check auth and API reachability with `staplehire doctor -q`.
+4. Pass all required flags explicitly.
+5. Poll async jobs before reading generated results.
+
+```bash
+JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
+staplehire jobs poll "$JOB_ID" -q
+staplehire sourcing prospects <roleId> | jq '.prospects[]'
+```
 
 ## Supported editors
 
 | Editor | Setup |
 | --- | --- |
-| **Cursor** | `staplehire skills install`; run CLI in agent terminal |
-| **Claude Code** | Skill + `staplehire commands` for discovery |
-| **OpenAI Codex** | Same CLI and JSON contract as the dashboard |
-| **OpenClaw** | Skills + messaging gateways |
-| **Hermes Agent** | Long-running hiring workflows |
-| **Pi** | Terminal harness + npm skills |
+| Cursor | `staplehire skills install`; run commands in the agent terminal |
+| Claude Code | Load the installed skill, then use JSON commands |
+| OpenAI Codex | Use the same CLI and command tree |
+| OpenClaw | Use skills plus terminal access |
+| Hermes Agent | Use for long-running hiring workflows |
+| Pi | Use terminal harness plus npm-installed skills |
 
-## Agent workflow
+## Rules for agents
 
-1. `staplehire login` (or `STAPLEHIRE_KEY` from [app.staplehire.com/settings/developers](https://app.staplehire.com/settings/developers))
-2. `staplehire roles list --json`
-3. Stage commands with `--json` (source → pipeline → investigate → interview → hire)
-4. Open **`urls.review_url`**, **`urls.dashboard_url`**, etc. from JSON — they point at **app.staplehire.com**, not the marketing site
+- Do not use `staplehire login` in CI or unattended runs.
+- Do not guess role, candidate, design, or job IDs.
+- Prefer `staplehire commands` over memorized command shapes.
+- Use `-q` or pipe stdout when a script needs JSON only.
+- After `candidates enrich` or `sourcing start`, call `jobs poll` before reading results.
 
-<Warning>
-  Do not guess role or candidate IDs — list or create via the CLI first. Do not hardcode `staplehire.com/roles/…`; use `urls` from API responses.
-</Warning>
+## FAQ
 
-## Search this docs site (MCP)
+### Can agents run Staplehire without browser login?
 
-Mintlify exposes this documentation to agents:
+Yes. Set `STAPLEHIRE_KEY` in the environment or pass `--api-key` for one command.
 
-- **Search (read):** `https://staplehire.com/docs/mcp`
-- **Edit docs (Admin MCP):** connect via [Mintlify MCP](https://mintlify.com/docs/ai-tools/mcp) in Cursor (**Cmd+Shift+P** → MCP settings → add server → reload)
+### What should an agent do first?
 
-Source for these pages lives in [`staplehire-landing/docs/`](https://github.com/navindev26/staplehire-landing/tree/main/docs) and deploys to `staplehire.com/docs` through Mintlify.
+Run `staplehire doctor -q`. It confirms the CLI version, key source, API URL, and API validation result.
+
+### How do agents discover command arguments?
+
+Run `staplehire commands`. It prints the machine-readable command tree as JSON.
+
+Related: [Authenticate the Staplehire CLI](/authentication) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)

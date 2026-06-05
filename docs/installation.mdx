@@ -1,72 +1,84 @@
 ---
-title: "Installation"
-description: "Install the CLI, log in, and verify your session"
+title: "Install the Staplehire CLI"
+description: "Install @staplehire/staplehire-cli, verify the staplehire binary, and run your first health check."
+sidebarTitle: "Installation"
 ---
 
-## Prerequisites
-
-- **Node.js 18+** and npm
-- A Staplehire account on [app.staplehire.com](https://app.staplehire.com) (browser login for `staplehire login`)
-
-## Install
+Install the Staplehire CLI globally with npm, then verify the `staplehire` binary before logging in.
 
 ```bash
 npm install -g @staplehire/staplehire-cli
 staplehire --version
+staplehire doctor
 ```
 
-## Authenticate (interactive)
+## Prerequisites
 
-```bash
-staplehire login
-```
-
-Opens a browser to **app.staplehire.com/connect**, completes PKCE OAuth, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
-
-`login` targets the production API gateway (`https://api.staplehire.com/functions/v1/staplehire-api`) by default.
-
-## Authenticate (agents & CI)
-
-Do **not** use `login` in automation. Create an API key in [Settings → Developers](https://app.staplehire.com/settings/developers) and set:
-
-```bash
-export STAPLEHIRE_KEY=sh_live_…
-```
-
-Optional overrides:
-
-| Variable | Default (production login) |
+| Requirement | Notes |
 | --- | --- |
-| `STAPLEHIRE_API_URL` | `https://api.staplehire.com/functions/v1/staplehire-api` |
-| `STAPLEHIRE_APP_URL` | `https://app.staplehire.com` |
+| Node.js | Node.js 18 or newer |
+| npm | Used for global installation |
+| Staplehire account | Required for `staplehire login` |
 
-For local development against staging, set `STAPLEHIRE_API_URL` to your staging gateway before running commands.
-
-## Verify
+## Install with npm
 
 ```bash
-staplehire doctor    # version, key, API round-trip
-staplehire whoami    # organization context
-staplehire roles list --json
+npm install -g @staplehire/staplehire-cli
 ```
 
-Example `login` / `whoami` JSON includes `app_url` and `api_url` so agents know which hosts to open:
+The package installs the `staplehire` binary.
+
+```bash
+staplehire --version
+```
+
+## Install from source
+
+Use source installation only when contributing to the CLI.
+
+```bash
+git clone https://github.com/staplehire/staplehire-cli.git
+cd staplehire-cli
+npm install
+npm run build
+node bin/staplehire.mjs --version
+```
+
+## Verify the install
+
+`doctor` checks the CLI version, API key source, API URL, and `GET /v1/me` API roundtrip.
+
+```bash
+staplehire doctor
+staplehire doctor -q
+```
+
+Example JSON output:
 
 ```json
 {
-  "api_url": "https://api.staplehire.com",
-  "app_url": "https://app.staplehire.com"
+  "ok": true,
+  "checks": [
+    { "name": "CLI Version", "status": "pass", "message": "v0.7.1 (latest)" },
+    { "name": "API Key", "status": "pass", "message": "sh_live_...xxxx (source: .env)" },
+    { "name": "API URL", "status": "pass", "message": "https://api.staplehire.com" },
+    { "name": "API Validation", "status": "pass", "message": "GET /v1/me OK (142ms) - Acme Corp" }
+  ]
 }
 ```
 
-## Agent skills (optional)
+## FAQ
 
-```bash
-staplehire skills install
-```
+### What package do I install?
 
-Installs the `staplehire` skill (command tree, `--json` contract, async jobs) into Cursor, Claude Code, and other supported editors. See [AI editors & skills](/ai-agents).
+Install `@staplehire/staplehire-cli`.
 
-<Note>
-  Auth errors? Run `staplehire login` again or `staplehire doctor` to see whether the key and API URL are valid.
-</Note>
+### What binary does the package provide?
+
+The binary is `staplehire`.
+
+### Should CI run `staplehire login`?
+
+No. Set `STAPLEHIRE_KEY` as a secret and use `staplehire doctor -q` to verify it.
+
+Related: [Authenticate the Staplehire CLI](/authentication) · [Use the Staplehire CLI in CI](/use-staplehire-cli-in-ci) · [Command reference](/commands)
