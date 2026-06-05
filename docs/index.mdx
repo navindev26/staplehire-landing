@@ -3,7 +3,7 @@ title: "Staplehire CLI"
 description: "Recruiting primitives for terminals and AI agents"
 ---
 
-The Staplehire CLI (`staplehire`) runs the full hiring loop from your terminal or editor — **source, inbox, investigate, interview, hire** — with **JSON output** when piped and readable output in an interactive shell.
+The Staplehire CLI (`staplehire`) runs the hiring loop from your terminal or editor — **source, pipeline, investigate, interview, hire** — with **JSON output** when piped and readable tables in an interactive shell.
 
 ```bash
 npm install -g @staplehire/staplehire-cli
@@ -11,20 +11,32 @@ staplehire login
 staplehire roles list --json
 ```
 
+Latest release: **`@staplehire/staplehire-cli@0.7.1`** on [npm](https://www.npmjs.com/package/@staplehire/staplehire-cli).
+
+## Domains
+
+| Host | Purpose |
+| --- | --- |
+| [staplehire.com](https://staplehire.com) | Marketing site and these docs (`/docs`) |
+| [app.staplehire.com](https://app.staplehire.com) | Product dashboard, OAuth `/connect`, apply links |
+| [api.staplehire.com](https://api.staplehire.com) | Hiring API gateway (CLI default for `login` / production keys) |
+
+API responses include a `urls` object on roles, candidates, and sessions — deep links point at **`app.staplehire.com`** (for example `urls.review_url` on a candidate with an interview session).
+
 ## What you can do
 
 | Stage | CLI focus |
 | --- | --- |
-| **Source** | Create roles from a JD, start sourcing, list prospects |
-| **Inbox** | List role inboxes, triage applications, surface strong fits |
-| **Investigate** | Enrich candidates, run research, read screening results |
-| **Interview** | Create interview designs, send invites, list sessions |
-| **Hire** | Send agent mail and move candidates through the pipeline |
+| **Source** | Create roles from a JD, start sourcing with search criteria, list prospects and run logs |
+| **Pipeline** | List roles and candidates, move stages, read `urls` from JSON |
+| **Investigate** | Enrich and research candidates, poll async jobs, read screening results |
+| **Interview** | Create designs, send invites, list sessions (signed recording URLs in JSON) |
+| **Hire** | Send agent email and advance candidates through stages |
 
 ## Output modes
 
 - **Interactive terminal** — tables and prompts for humans.
-- **Agents / scripts** — `--json` or pipe stdout for machine-readable records.
+- **Agents / scripts** — `--json` or pipe stdout for machine-readable records. Run `staplehire commands` for the full tree.
 
 <CardGroup cols={2}>
   <Card title="Installation" icon="download" href="/installation">
@@ -37,6 +49,6 @@ staplehire roles list --json
     Skills for Cursor, Claude Code, Codex, and more.
   </Card>
   <Card title="npm" icon="box" href="https://www.npmjs.com/package/@staplehire/staplehire-cli">
-  `@staplehire/staplehire-cli`
+    `@staplehire/staplehire-cli`
   </Card>
 </CardGroup>

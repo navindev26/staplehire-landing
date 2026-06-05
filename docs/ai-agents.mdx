@@ -9,33 +9,35 @@ description: "Use the Staplehire CLI from Cursor, Claude Code, Codex, and other 
 staplehire skills install
 ```
 
-Copies Staplehire skills into supported editors so agents discover commands and use `--json` for automation.
+Copies the **`staplehire`** agent skill from [`@staplehire/staplehire-cli`](https://github.com/staplehire/staplehire-cli) into supported editors. Agents load it before running `staplehire` so they use `--json`, poll async `jobs`, and read `urls` from responses instead of guessing IDs or hosts.
 
 ## Supported editors
 
 | Editor | Setup |
 | --- | --- |
-| **Cursor** | `skills install`; run `staplehire` in agent terminal |
-| **Claude Code** | Command tree + pipe JSON into workflows |
-| **OpenAI Codex** | Same CLI as the Staplehire app |
-| **OpenClaw** | Skills + gateway (Telegram, Discord, etc.) |
+| **Cursor** | `staplehire skills install`; run CLI in agent terminal |
+| **Claude Code** | Skill + `staplehire commands` for discovery |
+| **OpenAI Codex** | Same CLI and JSON contract as the dashboard |
+| **OpenClaw** | Skills + messaging gateways |
 | **Hermes Agent** | Long-running hiring workflows |
 | **Pi** | Terminal harness + npm skills |
 
 ## Agent workflow
 
-1. `staplehire login`
+1. `staplehire login` (or `STAPLEHIRE_KEY` from [app.staplehire.com/settings/developers](https://app.staplehire.com/settings/developers))
 2. `staplehire roles list --json`
-3. Stage commands with `--json` (source → inbox → investigate → interview → hire)
-4. Use dashboard URLs from JSON when a human must review
+3. Stage commands with `--json` (source → pipeline → investigate → interview → hire)
+4. Open **`urls.review_url`**, **`urls.dashboard_url`**, etc. from JSON — they point at **app.staplehire.com**, not the marketing site
 
 <Warning>
-  Do not guess role or candidate IDs — list or create via the CLI first.
+  Do not guess role or candidate IDs — list or create via the CLI first. Do not hardcode `staplehire.com/roles/…`; use `urls` from API responses.
 </Warning>
 
 ## Search this docs site (MCP)
 
-- **Search:** `https://staplehire.com/docs/mcp`
-- **Edit docs (Admin MCP):** `https://mcp.mintlify.com`
+Mintlify exposes this documentation to agents:
 
-Cursor: **Cmd+Shift+P** → **Open MCP settings** → add URL → reload.
+- **Search (read):** `https://staplehire.com/docs/mcp`
+- **Edit docs (Admin MCP):** connect via [Mintlify MCP](https://mintlify.com/docs/ai-tools/mcp) in Cursor (**Cmd+Shift+P** → MCP settings → add server → reload)
+
+Source for these pages lives in [`staplehire-landing/docs/`](https://github.com/navindev26/staplehire-landing/tree/main/docs) and deploys to `staplehire.com/docs` through Mintlify.

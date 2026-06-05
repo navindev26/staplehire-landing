@@ -6,7 +6,7 @@ description: "Install the CLI, log in, and verify your session"
 ## Prerequisites
 
 - **Node.js 18+** and npm
-- A [Staplehire](https://staplehire.com) account (browser login for `staplehire login`)
+- A Staplehire account on [app.staplehire.com](https://app.staplehire.com) (browser login for `staplehire login`)
 
 ## Install
 
@@ -15,19 +15,48 @@ npm install -g @staplehire/staplehire-cli
 staplehire --version
 ```
 
-## Authenticate
+## Authenticate (interactive)
 
 ```bash
 staplehire login
 ```
 
-Opens a browser and stores credentials locally.
+Opens a browser to **app.staplehire.com/connect**, completes PKCE OAuth, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
+
+`login` targets the production API gateway (`https://api.staplehire.com/functions/v1/staplehire-api`) by default.
+
+## Authenticate (agents & CI)
+
+Do **not** use `login` in automation. Create an API key in [Settings → Developers](https://app.staplehire.com/settings/developers) and set:
+
+```bash
+export STAPLEHIRE_KEY=sh_live_…
+```
+
+Optional overrides:
+
+| Variable | Default (production login) |
+| --- | --- |
+| `STAPLEHIRE_API_URL` | `https://api.staplehire.com/functions/v1/staplehire-api` |
+| `STAPLEHIRE_APP_URL` | `https://app.staplehire.com` |
+
+For local development against staging, set `STAPLEHIRE_API_URL` to your staging gateway before running commands.
 
 ## Verify
 
 ```bash
-staplehire roles list
-staplehire roles list --json   # for agents/scripts
+staplehire doctor    # version, key, API round-trip
+staplehire whoami    # organization context
+staplehire roles list --json
+```
+
+Example `login` / `whoami` JSON includes `app_url` and `api_url` so agents know which hosts to open:
+
+```json
+{
+  "api_url": "https://api.staplehire.com",
+  "app_url": "https://app.staplehire.com"
+}
 ```
 
 ## Agent skills (optional)
@@ -36,8 +65,8 @@ staplehire roles list --json   # for agents/scripts
 staplehire skills install
 ```
 
-See [AI editors & skills](/ai-agents).
+Installs the `staplehire` skill (command tree, `--json` contract, async jobs) into Cursor, Claude Code, and other supported editors. See [AI editors & skills](/ai-agents).
 
 <Note>
-  Auth errors? Run `staplehire login` again.
+  Auth errors? Run `staplehire login` again or `staplehire doctor` to see whether the key and API URL are valid.
 </Note>

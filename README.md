@@ -22,6 +22,15 @@ npm run dev
 
 Legacy paths (`/login`, `/signup`, `/apply/*`) redirect to the app subdomain via `vercel.json`.
 
+## CLI docs (Mintlify)
+
+CLI documentation is in [`docs/`](docs/) (Mintlify `docs.json` + MDX pages). Production:
+
+- **https://staplehire.com/docs** — proxied via `vercel.json` to Mintlify (`staplehire.mintlify.dev`)
+- **Agent search MCP** — `https://staplehire.com/docs/mcp`
+
+After editing MDX locally, push to `main` (or merge a PR). Mintlify deploys from the connected Git branch. To edit via Cursor Admin MCP, reconnect Mintlify in **Cursor → MCP settings** (refresh token required).
+
 ## SEO
 
 - Meta tags, Open Graph, Twitter cards, and JSON-LD in `index.html`

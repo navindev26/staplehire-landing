@@ -1,54 +1,76 @@
 ---
 title: "Commands"
-description: "Command reference for the full hiring loop"
+description: "Command reference for the hiring loop"
 ---
 
 Commands follow `staplehire <resource> <action>`. Add **`--json`** when piping to an agent or script.
 
 <Tip>
-  Run `staplehire --help` or `staplehire <resource> --help` for the command tree for your installed version.
+  Run `staplehire commands` for the machine-readable command tree for your installed version, or `staplehire <resource> --help` for a subcommand.
 </Tip>
+
+## Discovery & health
+
+```bash
+staplehire doctor
+staplehire whoami --json
+staplehire search --q "alex@company.com" --json
+```
 
 ## Source
 
 ```bash
-staplehire login
 staplehire roles create --jd @senior-sdr.md
-staplehire sourcing start <roleId>
+staplehire sourcing start <roleId> \
+  --search "Senior SDR, NYC fintech" \
+  --filter "Must have 3+ years outbound" \
+  --experience-years-min 3
 staplehire sourcing prospects <roleId> --json
+staplehire sourcing runs <roleId> --json
+staplehire jobs poll <jobId>
 ```
 
-## Agent inbox
+`roles create` returns `apply_url` on **app.staplehire.com** (public apply page for the role).
+
+## Pipeline
 
 ```bash
 staplehire roles list --json
-staplehire inbox messages <roleId> --json
-staplehire inbox triage <roleId> --surface-above 7.5
+staplehire roles get <roleId> --json
+staplehire roles candidates <roleId> --json
+staplehire candidates get <candidateId> --json
+staplehire candidates move <candidateId> --stage-id <stageId>
 ```
 
-Role inboxes use `hire+<role>@in.staplehire.com`.
+`candidates get` includes interview sessions, signed `recording_url` values, and `urls.review_url` on **app.staplehire.com** (opens the applicant drawer with session context).
 
 ## Investigate
 
 ```bash
 staplehire candidates enrich <candidateId>
 staplehire candidates research <candidateId>
+staplehire jobs list --role-id <roleId> --json
+staplehire jobs poll <jobId>
 staplehire candidates screening-result <candidateId> --json
 ```
 
 ## Interview
 
 ```bash
-staplehire designs create <roleId> --brief "SDR screen"
+staplehire designs create <roleId> --brief "SDR async screen"
+staplehire designs list <roleId> --json
 staplehire candidates send-interview <candidateId> --design <designId>
+staplehire candidates interview-link <candidateId> --design <designId> --json
 staplehire sessions list <roleId> --json
 ```
+
+Interview links use **app.staplehire.com/apply/…** (short token URLs when configured).
 
 ## Hire
 
 ```bash
 staplehire candidates send-email <candidateId> \
-  --subject "Staplehire" \
+  --subject "Next steps" \
   --title "Quick intro" \
   --body @message.md
 ```
@@ -56,5 +78,10 @@ staplehire candidates send-email <candidateId> \
 ## JSON output
 
 ```bash
-staplehire sourcing prospects rol_abc123 --json | jq '.prospects[] | select(.score >= 8)'
+staplehire sourcing prospects <roleId> --json | jq '.prospects[] | select(.fit_score >= 8)'
+staplehire candidates get <candidateId> --json | jq '.candidate.urls.review_url'
 ```
+
+<Warning>
+  Do not guess role or candidate IDs — list or create via the CLI first. Prefer `urls.*` from API JSON over constructing dashboard links by hand.
+</Warning>
