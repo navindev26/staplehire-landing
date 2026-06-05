@@ -13,7 +13,7 @@ staplehire whoami
 
 ## Quickstart
 
-`login` opens your browser, completes PKCE OAuth, validates the key, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
+`login` opens your browser to [app.staplehire.com/connect](https://app.staplehire.com/connect), completes PKCE OAuth against the production API gateway, validates the key, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
 
 ```bash
 staplehire login
@@ -46,7 +46,7 @@ The CLI resolves your API key in this order.
 
 ## Use an API key in CI
 
-Do not run browser login in automation. Create an API key in Staplehire settings and expose it as `STAPLEHIRE_KEY`.
+Do not run browser login in automation. Create an API key in [Settings → Developers](https://app.staplehire.com/settings/developers) and expose it as `STAPLEHIRE_KEY`.
 
 ```bash
 export STAPLEHIRE_KEY=sh_live_xxx

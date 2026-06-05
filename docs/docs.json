@@ -20,8 +20,8 @@
         "href": "https://www.npmjs.com/package/@staplehire/staplehire-cli"
       },
       {
-        "label": "Staplehire",
-        "href": "https://staplehire.com"
+        "label": "Open app",
+        "href": "https://app.staplehire.com"
       }
     ],
     "primary": {
@@ -32,7 +32,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/navindev26/staplehire-landing"
+      "github": "https://github.com/staplehire/staplehire-cli"
     }
   },
   "contextual": {
