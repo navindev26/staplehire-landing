@@ -1,12 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { trackPageEvent } from '@/services/analyticsService';
-import { appPath } from '@/lib/app-url';
-import {
-  CheckCircle2, Loader2,
-  Sun, Moon,
-} from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
+import { SiteLayout } from '@/components/layout/SiteLayout';
+import { HomeSeoHead } from '@/components/seo/HomeSeoHead';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/ui/logo';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -19,17 +16,10 @@ import FromJobToShortlistSection from '@/components/landing/FromJobToShortlistSe
 import VoiceWaveCanvas from '@/components/landing/VoiceWaveCanvas';
 
 const LandingPage: React.FC = () => {
-  const { isDark, toggleDarkMode } = useTheme();
-  const [navScrolled, setNavScrolled] = useState(false);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     trackPageEvent('landing_viewed');
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setNavScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Preload the alternate-theme gifs so toggling between dark/light is instant
@@ -103,47 +93,8 @@ const LandingPage: React.FC = () => {
   }, [demoForm]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-clip">
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-      >
-        Skip to content
-      </a>
-      {/* Navigation */}
-      <header>
-      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-        navScrolled
-          ? 'border-b border-foreground/5 bg-background/55 backdrop-blur-xl shadow-sm'
-          : 'bg-transparent'
-      }`}>
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-[104px]">
-          <div className="flex justify-between items-center h-[72px] md:h-[80px]">
-            <a href="/" className="cursor-pointer" aria-label="Staplehire home">
-              <Logo size="md" />
-            </a>
-
-            <div className="hidden md:flex items-center gap-6">
-              <button type="button" onClick={toggleDarkMode} className="size-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle theme">
-                {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-              </button>
-              <a href="#demo" onClick={() => trackPageEvent('landing_pilot_request_click', { location: 'nav' })}>
-                <Button className="rounded-full px-6 h-[42px] font-bold text-[14px] shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5">
-                  Request access
-                </Button>
-              </a>
-            </div>
-
-            <div className="flex md:hidden items-center justify-end min-w-0 flex-1 pl-3">
-              <button type="button" onClick={toggleDarkMode} className="size-9 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label="Toggle theme">
-                {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-      </header>
-
+    <SiteLayout>
+      <HomeSeoHead />
       <main id="main">
       {/* 1. Hero — Pain-first */}
       <HeroInbox />
@@ -443,24 +394,12 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       </main>
-
-      <footer className="bg-[var(--primitive-sunken)] px-4 py-8 sm:px-6 md:px-[104px] dark:bg-card">
-        <div className="max-w-[1440px] mx-auto flex flex-col items-center gap-4">
-          <Logo size="footer" className="pt-px" />
-          <p className="text-sm text-muted-foreground text-center">
-            <a href={appPath('/login')} className="underline-offset-4 hover:underline">
-              Sign in
-            </a>
-            {' · '}
-            Already hiring with Staplehire? Open the{' '}
-            <a href={appPath('/dashboard')} className="underline-offset-4 hover:underline">
-              app
-            </a>
-          </p>
-        </div>
-      </footer>
-    </div>
+    </SiteLayout>
   );
 };
+
+export function Component() {
+  return <LandingPage />;
+}
 
 export default LandingPage;
