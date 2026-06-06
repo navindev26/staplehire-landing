@@ -59,7 +59,7 @@ function CopyInstallButton() {
   );
 }
 
-export default function CliLandingPage() {
+function CliLandingPage() {
   const { isDark, toggleDarkMode } = useTheme();
   const [navScrolled, setNavScrolled] = useState(false);
 
@@ -322,3 +322,9 @@ export default function CliLandingPage() {
     </DevGridShell>
   );
 }
+
+export function Component() {
+  return <CliLandingPage />;
+}
+
+export default CliLandingPage;
