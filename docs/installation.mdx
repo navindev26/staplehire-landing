@@ -1,6 +1,6 @@
 ---
-title: "Install the Staplehire CLI"
-description: "Install @staplehire/staplehire-cli, verify the staplehire binary, and run your first health check."
+title: "Installation"
+description: "Install @staplehire/staplehire-cli with npm, verify the staplehire binary, and run your first health check with staplehire doctor."
 sidebarTitle: "Installation"
 ---
 
@@ -16,41 +16,50 @@ staplehire doctor
 
 | Requirement | Notes |
 | --- | --- |
-| Node.js | Node.js 18 or newer |
+| Node.js | Version 18 or newer |
 | npm | Used for global installation |
-| Staplehire account | Required for `staplehire login` |
+| Staplehire account | Required for `staplehire login` — sign up at [app.staplehire.com](https://app.staplehire.com) |
 
-## Install with npm
+## Install
 
-```bash
-npm install -g @staplehire/staplehire-cli
-```
+<Tabs>
+  <Tab title="npm (recommended)">
+    Installs the published package globally and puts the `staplehire` binary on your `PATH`.
 
-The package installs the `staplehire` binary.
+    ```bash
+    npm install -g @staplehire/staplehire-cli
+    staplehire --version
+    ```
+  </Tab>
+  <Tab title="npx (no install)">
+    Run a one-off command without installing globally. Useful in CI or to try the CLI.
 
-```bash
-staplehire --version
-```
+    ```bash
+    npx --yes @staplehire/staplehire-cli doctor -q
+    ```
+  </Tab>
+  <Tab title="From source">
+    Use the monorepo build only when contributing to the CLI. The package lives at `packages/hire`.
 
-## Install from source
+    ```bash
+    git clone https://github.com/navindev26/Staplehire.git
+    cd Staplehire/packages/hire
+    npm install
+    npm run build
+    node bin/staplehire.mjs --version
+    ```
+  </Tab>
+</Tabs>
 
-Use source installation only when contributing to the CLI.
-
-```bash
-git clone https://github.com/staplehire/staplehire-cli.git
-cd staplehire-cli
-npm install
-npm run build
-node bin/staplehire.mjs --version
-```
+The package name is `@staplehire/staplehire-cli`, and the binary it installs is `staplehire`.
 
 ## Verify the install
 
-`doctor` checks the CLI version, API key source, API URL, and `GET /v1/me` API roundtrip.
+`doctor` checks four things: the CLI version (against the latest on npm), your API key and where it came from, the API gateway URL, and a live `GET /v1/me` roundtrip.
 
 ```bash
-staplehire doctor
-staplehire doctor -q
+staplehire doctor       # human-readable
+staplehire doctor -q    # JSON only (for scripts and agents)
 ```
 
 Example JSON output:
@@ -58,27 +67,62 @@ Example JSON output:
 ```json
 {
   "ok": true,
+  "version": "0.7.1",
+  "latest": "0.7.1",
+  "api_url": "https://api.staplehire.com/…/staplehire-api",
   "checks": [
     { "name": "CLI Version", "status": "pass", "message": "v0.7.1 (latest)" },
-    { "name": "API Key", "status": "pass", "message": "sh_live_...xxxx (source: .env)" },
-    { "name": "API URL", "status": "pass", "message": "https://api.staplehire.com" },
-    { "name": "API Validation", "status": "pass", "message": "GET /v1/me OK (142ms) - Acme Corp" }
+    { "name": "API Key", "status": "pass", "message": "sh_live_xxxx…abcd (source: .env)" },
+    { "name": "API URL", "status": "pass", "message": "https://api.staplehire.com/…/staplehire-api" },
+    { "name": "API Validation", "status": "pass", "message": "GET /v1/me OK (142ms) — Acme Corp" }
   ]
 }
 ```
 
+<Note>
+  Before you authenticate, the **API Key** and **API Validation** checks will report `fail` — that is expected. Run [`staplehire login`](/authentication) (or set `STAPLEHIRE_KEY`), then re-run `doctor`.
+</Note>
+
+`doctor` exits `1` if any check fails, so it doubles as a CI preflight:
+
+```bash
+staplehire doctor -q | jq -e '.ok'
+```
+
+## Keep the CLI up to date
+
+Check whether a newer version is published on npm:
+
+```bash
+staplehire update
+```
+
+```json
+{
+  "current": "0.7.0",
+  "latest": "0.7.1",
+  "update_available": true,
+  "upgrade_command": "npm install -g @staplehire/staplehire-cli@0.7.1"
+}
+```
+
+Then run the `upgrade_command` it returns.
+
 ## FAQ
 
-### What package do I install?
+<AccordionGroup>
+  <Accordion title="What package do I install?">
+    `@staplehire/staplehire-cli`. It installs the `staplehire` binary and (for TypeScript users) also exports the `@staplehire/hire` SDK.
+  </Accordion>
+  <Accordion title="Do I need Node.js installed globally?">
+    Yes — Node.js 18 or newer. The CLI runs on Node and is distributed through npm.
+  </Accordion>
+  <Accordion title="Should CI run `staplehire login`?">
+    No. Browser login is for local development. In CI, set `STAPLEHIRE_KEY` as a secret and verify with `staplehire doctor -q`. See [Use in CI](/use-staplehire-cli-in-ci).
+  </Accordion>
+  <Accordion title="Where can I read the source?">
+    The CLI and SDK live in the monorepo at [`navindev26/Staplehire`](https://github.com/navindev26/Staplehire) under `packages/hire`.
+  </Accordion>
+</AccordionGroup>
 
-Install `@staplehire/staplehire-cli`.
-
-### What binary does the package provide?
-
-The binary is `staplehire`.
-
-### Should CI run `staplehire login`?
-
-No. Set `STAPLEHIRE_KEY` as a secret and use `staplehire doctor -q` to verify it.
-
-Related: [Authenticate the Staplehire CLI](/authentication) · [Use the Staplehire CLI in CI](/use-staplehire-cli-in-ci) · [Command reference](/commands)
+Related: [Authentication](/authentication) · [Quickstart](/quickstart) · [Use in CI](/use-staplehire-cli-in-ci)

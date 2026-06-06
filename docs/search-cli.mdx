@@ -1,0 +1,70 @@
+---
+title: "Search"
+description: "Search across roles and candidates in your Staplehire organization from the CLI with a single query."
+sidebarTitle: "Search"
+---
+
+`staplehire search` runs an organization-wide search across roles and candidates. Pass a query — a name, email, title, or keyword — and get matching `roles` and `candidates` back as JSON.
+
+```bash
+staplehire search --q "backend engineer"
+```
+
+## Search your organization
+
+```bash
+staplehire search --q "alex@example.com"
+```
+
+```json
+{
+  "roles": [
+    { "id": "550e8400-…", "title": "Backend Engineer", "status": "active" }
+  ],
+  "candidates": [
+    { "id": "cand_…", "email": "alex@example.com", "name": "Alex Chen", "role_id": "550e8400-…" }
+  ]
+}
+```
+
+Entries may include a `urls` object with dashboard deep links.
+
+### Parameters
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--q <text>` | Yes | Search query — name, email, role title, or keyword |
+
+## Examples
+
+### Find a candidate by email and grab their ID
+
+```bash
+staplehire search --q "alex@example.com" | jq -r '.candidates[0].id'
+```
+
+### Find roles matching a keyword
+
+```bash
+staplehire search --q "engineer" | jq '.roles[] | {id, title}'
+```
+
+## Common errors
+
+| Error | Exit code | Fix |
+| --- | --- | --- |
+| `ValidationError` | `3` | Missing `--q` — provide a search query |
+| `AuthenticationError` | `2` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What does search match on?">
+    Roles and candidates across your organization — by name, email, title, and related fields.
+  </Accordion>
+  <Accordion title="How do I narrow to just candidates on one role?">
+    Use `staplehire candidates list --role-id <roleId>` instead of org-wide search.
+  </Accordion>
+</AccordionGroup>
+
+Related: [Create a role](/create-role-cli) · [Add a candidate](/add-candidate-cli) · [Command reference](/commands)

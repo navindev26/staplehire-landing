@@ -1,52 +1,81 @@
 ---
-title: "Authenticate the Staplehire CLI"
-description: "Log in to the Staplehire CLI, set STAPLEHIRE_KEY, and verify your organization with whoami."
+title: "Authentication"
+description: "Authenticate the Staplehire CLI with browser OAuth (PKCE), set STAPLEHIRE_KEY for agents and CI, and verify your organization with staplehire whoami."
 sidebarTitle: "Authentication"
 ---
 
-Use `staplehire login` for local development, or set `STAPLEHIRE_KEY` for agents, scripts, and CI.
+Use `staplehire login` for local development, or set `STAPLEHIRE_KEY` for agents, scripts, and CI. Every command authenticates the same way: by resolving an API key.
 
 ```bash
 staplehire login
 staplehire whoami
 ```
 
-## Quickstart
+## Log in with your browser
 
-`login` opens your browser to [app.staplehire.com/connect](https://app.staplehire.com/connect), completes PKCE OAuth against the production API gateway, validates the key, and writes `STAPLEHIRE_KEY` to `.env` in the current directory.
+`staplehire login` runs a secure PKCE OAuth flow:
+
+<Steps>
+  <Step title="A local callback server starts">
+    The CLI opens a loopback server on `127.0.0.1` and your default browser to [app.staplehire.com](https://app.staplehire.com). Log in or create an account if needed.
+  </Step>
+  <Step title="You authorize CLI access">
+    Approve the `hire:write` scope for "Staplehire CLI". The browser redirects back to the local callback with an authorization code.
+  </Step>
+  <Step title="The key is exchanged and saved">
+    The CLI exchanges the code (plus the PKCE verifier) with the API gateway, then writes `STAPLEHIRE_KEY` to a `.env` file in your current directory and adds `.env` to `.gitignore` if one exists.
+  </Step>
+</Steps>
 
 ```bash
 staplehire login
 ```
 
-Verify the active key and organization:
+```
+✓ Authenticated as Acme Corp
+✓ Wrote STAPLEHIRE_KEY to /path/to/project/.env
+```
+
+<Note>
+  `staplehire login` always authenticates against the **production** gateway and dashboard. Override with `--app-url` / `--api-url` (or `STAPLEHIRE_APP_URL` / `STAPLEHIRE_API_URL`) only when testing against a non-production environment.
+</Note>
+
+Verify the active key and organization at any time:
 
 ```bash
 staplehire whoami
 ```
-
-Example output:
 
 ```json
 {
-  "user": { "id": "usr_...", "email": "you@company.com" },
-  "organization": { "id": "org_...", "name": "Acme Corp" }
+  "user": { "id": "usr_…", "email": "you@company.com" },
+  "organization": { "id": "org_…", "name": "Acme Corp" }
 }
 ```
 
-## API key priority
+## How the API key is resolved
 
-The CLI resolves your API key in this order.
+The CLI looks for an API key in this order and uses the first one it finds:
 
 | Priority | Source | Example |
 | --- | --- | --- |
 | 1 | `--api-key` flag | `staplehire --api-key sh_live_xxx roles list` |
-| 2 | `STAPLEHIRE_KEY` env var | `export STAPLEHIRE_KEY=sh_live_xxx` |
-| 3 | `.env` in cwd | Written by `staplehire login` |
+| 2 | `STAPLEHIRE_KEY` environment variable | `export STAPLEHIRE_KEY=sh_live_xxx` |
+| 3 | `.env` in the current directory | Written automatically by `staplehire login` |
 
-## Use an API key in CI
+Keys are prefixed `sh_live_…` (production) or `sh_test_…` (test). `staplehire doctor` shows which source the active key came from:
 
-Do not run browser login in automation. Create an API key in [Settings → Developers](https://app.staplehire.com/settings/developers) and expose it as `STAPLEHIRE_KEY`.
+```bash
+staplehire doctor -q | jq '.checks[] | select(.name == "API Key")'
+```
+
+<Warning>
+  Never pass an API key as a literal command-line argument in shared shells, scripts committed to source control, or CI logs — it can leak into shell history and process listings. Prefer `STAPLEHIRE_KEY` from a secret store. `staplehire login` keeps your `.env` out of git automatically.
+</Warning>
+
+## Use an API key for agents and CI
+
+Browser login is for humans. Agents, scripts, and CI should set `STAPLEHIRE_KEY` directly. Create a key in [Settings → Developers](https://app.staplehire.com/settings/developers).
 
 ```bash
 export STAPLEHIRE_KEY=sh_live_xxx
@@ -54,13 +83,21 @@ staplehire doctor -q
 staplehire whoami | jq '.organization.id'
 ```
 
+For a single command without exporting, use `--api-key`:
+
+```bash
+staplehire --api-key sh_live_xxx roles list
+```
+
+See [Use in CI](/use-staplehire-cli-in-ci) for a GitHub Actions example.
+
 ## Log out
+
+`logout` removes `STAPLEHIRE_KEY` from the `.env` in your current directory and clears it from the current process environment.
 
 ```bash
 staplehire logout
 ```
-
-Example output:
 
 ```json
 { "logged_out": true, "env_path": "/path/to/project/.env", "key_removed_from_env": true }
@@ -68,24 +105,30 @@ Example output:
 
 ## Common errors
 
-| Error | Fix |
-| --- | --- |
-| `AuthenticationError` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
-| `PermissionError` | Confirm the key belongs to the right organization |
-| `ValidationError` | Check the command flags and field names |
+| Error | Exit code | Fix |
+| --- | --- | --- |
+| `AuthenticationError` (401) | `2` | Run `staplehire login` or set a valid `STAPLEHIRE_KEY` |
+| `PermissionError` (403) | `6` | Confirm the key belongs to the right organization and scope |
+| `api_key_invalid` | `2` | The key is malformed or wrong — create a new one |
+| `api_key_revoked` | `2` | The key was revoked — issue a new key in Settings → Developers |
+
+See [CLI errors](/cli-errors) for the full exit-code contract.
 
 ## FAQ
 
-### Where does `staplehire login` store credentials?
+<AccordionGroup>
+  <Accordion title="Where does `staplehire login` store credentials?">
+    It writes `STAPLEHIRE_KEY` to a `.env` file in the directory you ran it from, and ensures `.env` is in `.gitignore` when a `.gitignore` exists.
+  </Accordion>
+  <Accordion title="Can I authenticate just one command?">
+    Yes. Put `--api-key sh_live_xxx` before the subcommand. It overrides any env var or `.env` for that invocation only.
+  </Accordion>
+  <Accordion title="Is `staplehire init` still supported?">
+    Yes — `init` is a deprecated alias for `login`. Both work; prefer `login`.
+  </Accordion>
+  <Accordion title="What does the `--profile` flag do?">
+    It is reserved for multi-profile authentication and is not active yet. Use `--api-key` or `STAPLEHIRE_KEY` to switch organizations today.
+  </Accordion>
+</AccordionGroup>
 
-It writes `STAPLEHIRE_KEY` to `.env` in the current directory.
-
-### Can I pass an API key for one command?
-
-Yes. Use `--api-key` before the subcommand.
-
-### Is `staplehire init` still supported?
-
-Yes, but it is a deprecated alias for `staplehire login`.
-
-Related: [Install the Staplehire CLI](/installation) · [Use the Staplehire CLI in CI](/use-staplehire-cli-in-ci) · [CLI errors](/cli-errors)
+Related: [Installation](/installation) · [Use in CI](/use-staplehire-cli-in-ci) · [CLI errors](/cli-errors)

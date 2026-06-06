@@ -1,10 +1,10 @@
 ---
-title: "Use the Staplehire CLI with AI agents"
-description: "Install Staplehire agent skills and run non-interactive CLI workflows from Cursor, Claude Code, Codex, and CI."
+title: "Use with AI agents"
+description: "Install the Staplehire agent skill so Cursor, Claude Code, and Codex can discover commands, pass required flags, and consume JSON output safely."
 sidebarTitle: "AI agents"
 ---
 
-Install the Staplehire skill so AI agents can discover commands, pass required flags, and consume JSON output safely.
+The Staplehire CLI is built for AI coding agents. Install the bundled **skill** so agents know the command surface and the non-interactive contract, then let them drive your hiring workflows from their terminal.
 
 ```bash
 staplehire skills install
@@ -12,70 +12,131 @@ staplehire commands | jq '.subcommands[].name'
 staplehire doctor -q
 ```
 
-## Install skills
+## Install the skill
+
+`skills install` copies the `staplehire` skill into the agent skill roots it finds in your **current project**. It looks for `.agents/`, `.claude/`, and `.cursor/` and installs into their `skills/` directories.
 
 ```bash
 staplehire skills install
 ```
 
-`skills install` installs the `staplehire-cli` skill into supported agent roots.
+The JSON output reports where the skill was installed:
 
 ```json
 {
-  "installed": true,
-  "targets": [
-    { "agent": "cursor", "path": "~/.cursor/skills/staplehire", "method": "symlink" }
-  ]
+  "primary": "/path/to/project/.agents/skills/staplehire",
+  "extras": ["/path/to/project/.cursor/skills/staplehire"],
+  "created": null
 }
 ```
 
-Use `--copy` to copy files instead of symlinking, or `--dry-run` to preview changes.
+- **`primary`** — the first agent root found; the skill files are copied here.
+- **`extras`** — additional roots; by default these are symlinked to `primary` (use `--copy` to copy instead).
+- **`created`** — set to a path (for example `.agents/skills`) when no agent root existed and the CLI created `.agents/skills` for you.
 
-## Agent workflow
+### Options
 
-1. Install the skill with `staplehire skills install`.
-2. Discover commands with `staplehire commands`.
-3. Check auth and API reachability with `staplehire doctor -q`.
-4. Pass all required flags explicitly.
-5. Poll async jobs before reading generated results.
+| Flag | Description |
+| --- | --- |
+| `--copy` | Copy files into every root instead of symlinking the extras to `primary` |
+| `--dry-run` | Print where the skill *would* be installed without writing anything |
 
 ```bash
-JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID" -q
-staplehire sourcing prospects <roleId> | jq '.prospects[]'
+staplehire skills install --dry-run
 ```
 
-## Supported editors
+```json
+{
+  "primary": "/path/to/project/.agents/skills/staplehire",
+  "extras": [],
+  "created": ".agents/skills",
+  "dryRun": true
+}
+```
 
-| Editor | Setup |
+<Note>
+  Skills install into the **project** directory you run the command from (`.agents/skills/staplehire`, etc.), not a global home directory. Run it inside the repo your agent works in.
+</Note>
+
+## The agent protocol
+
+The CLI auto-detects non-TTY environments and emits JSON — no `--json` flag needed (though `-q` forces clean JSON-only output). Agents should follow these rules:
+
+<Steps>
+  <Step title="Discover, don't guess">
+    Run `staplehire commands` for the machine-readable command tree that matches the installed version. Don't hardcode flag shapes.
+
+    ```bash
+    staplehire commands | jq '.subcommands[] | {name, subcommands: (.subcommands // [] | map(.name))}'
+    ```
+  </Step>
+  <Step title="Check the environment first">
+    ```bash
+    staplehire doctor -q | jq -e '.ok'
+    ```
+  </Step>
+  <Step title="Supply every required flag">
+    The CLI never prompts when stdin is not a TTY. Missing a required flag fails with exit code `8`.
+  </Step>
+  <Step title="Poll async jobs before reading results">
+    ```bash
+    JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
+    staplehire jobs poll "$JOB_ID" -q
+    staplehire sourcing prospects <roleId> | jq '.prospects[]'
+    ```
+  </Step>
+  <Step title="Branch on exit codes, not message strings">
+    Read `error.code` from stderr JSON and the [process exit code](/cli-errors) — never grep `error.message`.
+  </Step>
+</Steps>
+
+## Authentication for agents
+
+Agents and CI must **not** use `staplehire login` (it opens a browser). Set `STAPLEHIRE_KEY` in the environment, or pass `--api-key` for a single command.
+
+```bash
+export STAPLEHIRE_KEY=sh_live_xxx
+staplehire whoami | jq '.organization.id'
+```
+
+See [Authentication](/authentication) and [Use in CI](/use-staplehire-cli-in-ci).
+
+## Output contract for agents
+
+- **Success** → JSON on **stdout**, exit `0`.
+- **Failure** → `{ "error": { … } }` on **stderr**, non-zero [exit code](/cli-errors).
+- Use `-q` to suppress human status lines so stdout is pure JSON.
+- Read responses may include a `urls` object with dashboard deep links.
+
+```json
+{"error":{"name":"ValidationError","code":"candidate_email_invalid","message":"…","hint":"…","field":"email","requestId":"req_…","status":400}}
+```
+
+## Supported agents
+
+| Agent | Setup |
 | --- | --- |
-| Cursor | `staplehire skills install`; run commands in the agent terminal |
-| Claude Code | Load the installed skill, then use JSON commands |
-| OpenAI Codex | Use the same CLI and command tree |
-| OpenClaw | Use skills plus terminal access |
-| Hermes Agent | Use for long-running hiring workflows |
-| Pi | Use terminal harness plus npm-installed skills |
-
-## Rules for agents
-
-- Do not use `staplehire login` in CI or unattended runs.
-- Do not guess role, candidate, design, or job IDs.
-- Prefer `staplehire commands` over memorized command shapes.
-- Use `-q` or pipe stdout when a script needs JSON only.
-- After `candidates enrich` or `sourcing start`, call `jobs poll` before reading results.
+| Cursor | `staplehire skills install` (detects `.cursor/`); run commands in the agent terminal |
+| Claude Code | `staplehire skills install` (detects `.claude/`); the skill loads automatically |
+| OpenAI Codex | `staplehire skills install` (uses `.agents/`); same CLI and command tree |
+| Hermes Agent | Use the terminal toolset with `STAPLEHIRE_KEY` set; ideal for long-running flows |
+| Any terminal-capable agent | Set `STAPLEHIRE_KEY`, run `staplehire commands` to discover the surface |
 
 ## FAQ
 
-### Can agents run Staplehire without browser login?
+<AccordionGroup>
+  <Accordion title="Can agents run Staplehire without browser login?">
+    Yes — set `STAPLEHIRE_KEY` in the environment, or pass `--api-key` for one command. Never use `login` in unattended runs.
+  </Accordion>
+  <Accordion title="What should an agent run first?">
+    `staplehire doctor -q` to confirm version, key source, API URL, and a live API validation, then `staplehire commands` to discover the command tree.
+  </Accordion>
+  <Accordion title="Where does the skill get installed?">
+    Into the agent roots in your current project — `.agents/skills/staplehire`, `.claude/skills/staplehire`, and/or `.cursor/skills/staplehire`. If none exist, the CLI creates `.agents/skills`.
+  </Accordion>
+  <Accordion title="Should I use `--copy` or symlinks?">
+    Symlinks (the default) keep one source of truth. Use `--copy` when your environment can't follow symlinks (some sandboxes and CI runners).
+  </Accordion>
+</AccordionGroup>
 
-Yes. Set `STAPLEHIRE_KEY` in the environment or pass `--api-key` for one command.
-
-### What should an agent do first?
-
-Run `staplehire doctor -q`. It confirms the CLI version, key source, API URL, and API validation result.
-
-### How do agents discover command arguments?
-
-Run `staplehire commands`. It prints the machine-readable command tree as JSON.
-
-Related: [Authenticate the Staplehire CLI](/authentication) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Authentication](/authentication) · [Poll jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
