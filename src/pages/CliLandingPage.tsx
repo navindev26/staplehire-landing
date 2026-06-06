@@ -91,10 +91,22 @@ function CliLandingPage() {
               </a>
               <div className="flex items-center gap-4 sm:gap-6">
                 <a
-                  href="/"
+                  href="/#features"
                   className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Product
+                  Features
+                </a>
+                <a
+                  href="/docs"
+                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Docs
+                </a>
+                <a
+                  href="/blog"
+                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Blog
                 </a>
                 <button
                   type="button"

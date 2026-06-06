@@ -37,7 +37,7 @@ export default function FromJobToShortlistSection() {
   const { isDark } = useTheme();
   return (
     <section
-      id="from-job-to-shortlist"
+      id="features"
       className="relative scroll-mt-[88px] overflow-x-clip px-4 py-12 sm:px-6 md:py-20"
       aria-labelledby="from-job-to-shortlist-heading"
     >
