@@ -87,12 +87,22 @@ export default function ScrollReveal({
   const revealOnMount = useRevealOnMount(ref);
   const isVisible = revealOnMount || inView;
 
+  // SSG / no-JS / observer-never-fires safety net: if for any reason the
+  // element hasn't been revealed shortly after mount, force it visible so
+  // content is never trapped at opacity:0. The scroll animation is treated
+  // as progressive enhancement — content readability is non-negotiable.
+  const [forceVisible, setForceVisible] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setForceVisible(true), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <motion.div
       ref={ref}
       variants={PRESETS[preset]}
       initial="hidden"
-      animate={isVisible ? 'visible' : 'hidden'}
+      animate={isVisible || forceVisible ? 'visible' : 'hidden'}
       transition={{ duration, delay, ease: EASE }}
       className={className}
     >
@@ -120,11 +130,17 @@ export function StaggerContainer({
   const revealOnMount = useRevealOnMount(ref);
   const isVisible = revealOnMount || inView;
 
+  const [forceVisible, setForceVisible] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setForceVisible(true), 1200);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <motion.div
       ref={ref}
       initial="hidden"
-      animate={isVisible ? 'visible' : 'hidden'}
+      animate={isVisible || forceVisible ? 'visible' : 'hidden'}
       variants={{
         hidden: {},
         visible: { transition: { staggerChildren: stagger, delayChildren } },
