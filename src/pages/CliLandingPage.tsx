@@ -85,29 +85,42 @@ function CliLandingPage() {
           }`}
         >
           <DevGridContainer>
-            <div className="flex justify-between items-center h-[72px]">
+            <div className="flex justify-between items-center h-[72px] md:h-[80px]">
               <a href="/" className="cursor-pointer" aria-label="Staplehire home">
                 <Logo size="md" />
               </a>
-              <div className="flex items-center gap-4 sm:gap-6">
+
+              {/* Center: primary nav — matches SiteHeader (CLI is the active page) */}
+              <div className="hidden md:flex items-center gap-7">
                 <a
                   href="/#features"
-                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Features
                 </a>
                 <a
+                  href="/cli"
+                  aria-current="page"
+                  className="text-[14px] font-medium tracking-[0.01em] text-foreground transition-colors"
+                >
+                  CLI
+                </a>
+                <a
                   href="/docs"
-                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Docs
                 </a>
                 <a
                   href="/blog"
-                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Blog
                 </a>
+              </div>
+
+              {/* Right: utilities + CTA — matches SiteHeader, with CLI-appropriate primary action */}
+              <div className="flex items-center gap-4">
                 <button
                   type="button"
                   onClick={toggleDarkMode}
@@ -117,10 +130,16 @@ function CliLandingPage() {
                   {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
                 </button>
                 <a
+                  href="https://app.staplehire.com/login"
+                  className="hidden sm:inline text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Sign in
+                </a>
+                <a
                   href="#get-started"
                   onClick={() => trackPageEvent('cli_cta_click', { location: 'nav' })}
                 >
-                  <Button className="rounded-full px-5 h-[46px] font-bold text-base shadow-lg shadow-primary/20">
+                  <Button className="rounded-full px-5 h-[40px] font-semibold text-[14px] shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/30">
                     Get started
                   </Button>
                 </a>
