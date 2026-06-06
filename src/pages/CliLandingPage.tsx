@@ -106,7 +106,7 @@ function CliLandingPage() {
                   CLI
                 </a>
                 <a
-                  href="/docs"
+                  href="/docs/index"
                   className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   Docs

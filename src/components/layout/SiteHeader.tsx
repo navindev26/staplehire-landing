@@ -17,7 +17,7 @@ type NavItem = { label: string; href: string; internal?: boolean };
 const NAV_ITEMS: NavItem[] = [
   { label: 'Features', href: '/#features' },
   { label: 'CLI', href: '/cli', internal: true },
-  { label: 'Docs', href: '/docs' },
+  { label: 'Docs', href: '/docs/index' },
   { label: 'Blog', href: '/blog', internal: true },
 ];
 
