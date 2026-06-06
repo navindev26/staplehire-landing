@@ -60,8 +60,9 @@ export default function FromJobToShortlistSection() {
             return (
               <StaggerContainer
                 key={step.title}
+                id={step.title.toLowerCase()}
                 stagger={0.18}
-                className="grid w-full grid-cols-1 items-center gap-8 md:gap-14 lg:grid-cols-2"
+                className="grid w-full scroll-mt-[88px] grid-cols-1 items-center gap-8 md:gap-14 lg:grid-cols-2"
               >
                 <StaggerItem
                   preset={visualPreset}

@@ -115,12 +115,14 @@ export default function ScrollReveal({
 export function StaggerContainer({
   children,
   className,
+  id,
   stagger = 0.12,
   delayChildren = 0,
   amount = 0.15,
 }: {
   children: ReactNode;
   className?: string;
+  id?: string;
   stagger?: number;
   delayChildren?: number;
   amount?: number;
@@ -139,6 +141,7 @@ export function StaggerContainer({
   return (
     <motion.div
       ref={ref}
+      id={id}
       initial="hidden"
       animate={isVisible || forceVisible ? 'visible' : 'hidden'}
       variants={{
