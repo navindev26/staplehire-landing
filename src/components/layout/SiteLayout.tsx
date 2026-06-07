@@ -2,14 +2,15 @@ import type { ReactNode } from 'react';
 import { ClientOnly } from 'vite-react-ssg';
 import { Analytics } from '@vercel/analytics/react';
 import { SiteFooter } from './SiteFooter';
-import { SiteHeader } from './SiteHeader';
+import { SiteHeader, type SiteNavActivePage } from './SiteHeader';
 
 interface SiteLayoutProps {
   children: ReactNode;
   className?: string;
+  activePage?: SiteNavActivePage;
 }
 
-export function SiteLayout({ children, className = '' }: SiteLayoutProps) {
+export function SiteLayout({ children, className = '', activePage }: SiteLayoutProps) {
   return (
     <div className={`min-h-screen bg-background text-foreground overflow-x-clip ${className}`}>
       <a
@@ -18,7 +19,7 @@ export function SiteLayout({ children, className = '' }: SiteLayoutProps) {
       >
         Skip to content
       </a>
-      <SiteHeader />
+      <SiteHeader activePage={activePage} />
       {children}
       <SiteFooter />
       <ClientOnly>{() => <Analytics />}</ClientOnly>

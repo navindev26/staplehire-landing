@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { useTheme } from '@/hooks/use-theme';
 import { trackPageEvent } from '@/services/analyticsService';
+import { DOCS_URL } from '@/lib/docs-url';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -41,15 +42,24 @@ const FEATURES = [
 ];
 
 const SIMPLE_LINKS = [
-  { label: 'CLI', href: '/cli', internal: true },
-  { label: 'Docs', href: '/docs/index' },
-  { label: 'Blog', href: '/blog', internal: true },
+  { id: 'cli' as const, label: 'CLI', href: '/cli', internal: true },
+  { id: 'docs' as const, label: 'Docs', href: DOCS_URL, internal: false },
+  { id: 'blog' as const, label: 'Blog', href: '/blog', internal: true },
 ];
 
 const navLinkClass =
   'text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground';
 
-export function SiteHeader() {
+const navLinkActiveClass =
+  'text-[14px] font-medium tracking-[0.01em] text-foreground';
+
+export type SiteNavActivePage = 'cli' | 'blog';
+
+type SiteHeaderProps = {
+  activePage?: SiteNavActivePage;
+};
+
+export function SiteHeader({ activePage }: SiteHeaderProps = {}) {
   const { isDark, toggleDarkMode } = useTheme();
   const [navScrolled, setNavScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,7 +83,7 @@ export function SiteHeader() {
       <nav
         className={`sticky top-0 z-50 transition-all duration-300 ${
           navScrolled || mobileOpen
-            ? 'border-b border-[rgba(214,235,253,0.12)] bg-background/70 backdrop-blur-xl'
+            ? 'border-b border-foreground/10 bg-background/70 backdrop-blur-xl'
             : 'border-b border-transparent bg-transparent'
         }`}
       >
@@ -118,29 +128,33 @@ export function SiteHeader() {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
 
-                  {SIMPLE_LINKS.map((item) => (
-                    <NavigationMenuItem key={item.label}>
-                      {item.internal ? (
-                        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                          <Link
-                            to={item.href}
-                            className="h-9 bg-transparent px-3 text-[14px] font-medium tracking-[0.01em] text-muted-foreground hover:bg-transparent hover:text-foreground"
-                          >
-                            {item.label}
-                          </Link>
-                        </NavigationMenuLink>
-                      ) : (
-                        <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                          <a
-                            href={item.href}
-                            className="h-9 bg-transparent px-3 text-[14px] font-medium tracking-[0.01em] text-muted-foreground hover:bg-transparent hover:text-foreground"
-                          >
-                            {item.label}
-                          </a>
-                        </NavigationMenuLink>
-                      )}
-                    </NavigationMenuItem>
-                  ))}
+                  {SIMPLE_LINKS.map((item) => {
+                    const isActive = activePage === item.id;
+                    const linkClass = `h-9 bg-transparent px-3 hover:bg-transparent ${
+                      isActive ? navLinkActiveClass : `${navLinkClass} hover:text-foreground`
+                    }`;
+                    return (
+                      <NavigationMenuItem key={item.label}>
+                        {item.internal ? (
+                          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                            <Link
+                              to={item.href}
+                              className={linkClass}
+                              {...(isActive ? { 'aria-current': 'page' as const } : {})}
+                            >
+                              {item.label}
+                            </Link>
+                          </NavigationMenuLink>
+                        ) : (
+                          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                            <a href={item.href} className={linkClass}>
+                              {item.label}
+                            </a>
+                          </NavigationMenuLink>
+                        )}
+                      </NavigationMenuItem>
+                    );
+                  })}
                 </NavigationMenuList>
               </NavigationMenu>
             </div>
@@ -193,7 +207,7 @@ export function SiteHeader() {
 
         {/* Mobile drawer */}
         {mobileOpen && (
-          <div className="border-t border-[rgba(214,235,253,0.12)] bg-background/95 backdrop-blur-xl md:hidden">
+          <div className="border-t border-foreground/10 bg-background/95 backdrop-blur-xl md:hidden">
             <div className="mx-auto flex max-w-[1440px] flex-col gap-1 px-4 py-4 sm:px-6">
               {/* Features expanded inline on mobile */}
               <p className="px-1 pb-1 pt-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -210,14 +224,15 @@ export function SiteHeader() {
                   {feature.title}
                 </a>
               ))}
-              <div className="my-2 h-px bg-[rgba(214,235,253,0.12)]" />
+              <div className="my-2 h-px bg-foreground/10" />
               {SIMPLE_LINKS.map((item) =>
                 item.internal ? (
                   <Link
                     key={item.label}
                     to={item.href}
-                    className={`${navLinkClass} py-2`}
+                    className={`${activePage === item.id ? navLinkActiveClass : navLinkClass} py-2`}
                     onClick={() => setMobileOpen(false)}
+                    {...(activePage === item.id ? { 'aria-current': 'page' as const } : {})}
                   >
                     {item.label}
                   </Link>

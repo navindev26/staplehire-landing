@@ -1087,27 +1087,6 @@ html {
   --invert-foreground: var(--color-zinc-50);
 }
 
-/* Blog post header */
-.blog-post-title {
-  font-family: var(--font-sans);
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-size: 1.5rem;
-}
-
-@media (min-width: 640px) {
-  .blog-post-title {
-    font-size: 1.75rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .blog-post-title {
-    font-size: 2rem;
-  }
-}
-
 .blog-post-subtitle {
   font-family: var(--font-sans);
   font-weight: 400;

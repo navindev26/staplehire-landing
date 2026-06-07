@@ -12,7 +12,7 @@ interface BlogSeoHeadProps {
 
 const BLOG_INDEX_TITLE = 'Blog | Staplehire';
 const BLOG_INDEX_DESCRIPTION =
-  'Insights on hiring, technical interviews, and building better recruiting workflows from the Staplehire team.';
+  'The Staplehire blog is coming soon. Notes on hiring, technical interviews, and building better recruiting workflows.';
 
 export function BlogSeoHead({ post }: BlogSeoHeadProps) {
   if (!post) {

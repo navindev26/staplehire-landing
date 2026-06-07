@@ -14,20 +14,20 @@ function formatDate(date: string): string {
 
 export function BlogPostHeader({ post }: BlogPostHeaderProps) {
   return (
-    <header className="blog-post-header text-center mb-10 md:mb-12">
-      <time className="caption text-muted-foreground block mb-3" dateTime={post.date}>
+    <header className="blog-post-header mb-10 md:mb-12">
+      <time className="caption mb-4 block text-muted-foreground" dateTime={post.date}>
         {formatDate(post.date)}
       </time>
-      <h1 className="blog-post-title text-foreground text-balance mb-3">{post.title}</h1>
-      <p className="blog-post-subtitle text-muted-foreground max-w-[560px] mx-auto text-balance">
+      <h1 className="typography-h2 text-balance text-foreground">{post.title}</h1>
+      <p className="blog-post-subtitle mt-4 max-w-[60ch] text-balance text-muted-foreground">
         {post.description}
       </p>
-      <div className="flex items-center justify-center gap-3 mt-5">
+      <div className="mt-6 flex items-center gap-3">
         {post.authorImage ? (
           <img
             src={post.authorImage}
-            alt=""
-            className="size-9 shrink-0 rounded-full object-cover border border-foreground/10"
+            alt={post.author}
+            className="size-9 shrink-0 rounded-full border border-foreground/10 object-cover"
             loading="eager"
             decoding="async"
           />
