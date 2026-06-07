@@ -7,9 +7,11 @@ import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import path from 'path';
 import { rehypeBlogImages } from './src/lib/rehype-blog-images';
+import { mintlifyDocsProxy } from './vite-mintlify-proxy';
 
 export default defineConfig({
   plugins: [
+    mintlifyDocsProxy(),
     mdx({
       remarkPlugins: [remarkFrontmatter, remarkGfm],
       rehypePlugins: [

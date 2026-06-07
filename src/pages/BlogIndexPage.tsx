@@ -1,28 +1,18 @@
 import { SiteLayout } from '@/components/layout/SiteLayout';
-import { BlogCard } from '@/components/blog/BlogCard';
 import { BlogSeoHead } from '@/components/blog/BlogSeoHead';
-import { getAllPosts } from '@/lib/blog';
 
 function BlogIndexPage() {
-  const posts = getAllPosts();
-
   return (
-    <SiteLayout>
+    <SiteLayout activePage="blog">
       <BlogSeoHead />
       <main id="main" className="px-4 sm:px-6 md:px-[104px] py-12 md:py-20">
-        <div className="max-w-[1170px] mx-auto">
-          <header className="mb-12 md:mb-16">
-            <h1 className="typography-h1 text-foreground">Blog</h1>
-          </header>
-          {posts.length === 0 ? (
-            <p className="para text-muted-foreground">No posts yet. Check back soon.</p>
-          ) : (
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.map((post) => (
-                <BlogCard key={post.slug} post={post} />
-              ))}
-            </div>
-          )}
+        <div className="mx-auto max-w-[1170px]">
+          <p className="mb-3 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
+            COMING SOON
+          </p>
+          <p className="para text-muted-foreground">
+            We&apos;re working on our first posts. Check back soon.
+          </p>
         </div>
       </main>
     </SiteLayout>

@@ -1,6 +1,9 @@
 import type { ComponentType } from 'react';
 import postsMeta from '@/generated/blog-posts.json';
 
+/** Set true when posts should appear on /blog and at /blog/:slug. */
+export const BLOG_PUBLISHED = false;
+
 const REQUIRED_FIELDS = ['title', 'description', 'slug', 'date', 'author'] as const;
 
 export interface BlogPostMeta {
@@ -85,6 +88,7 @@ export function getAllSlugs(): string[] {
 }
 
 export function getAllBlogPaths(): string[] {
+  if (!BLOG_PUBLISHED) return [];
   return getAllSlugs().map((slug) => `/blog/${slug}`);
 }
 

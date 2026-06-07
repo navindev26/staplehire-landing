@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sun, Moon, Copy, Check, Plus } from 'lucide-react';
+import { Copy, Check, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/ui/logo';
-import { useTheme } from '@/hooks/use-theme';
+import { SiteLayout } from '@/components/layout/SiteLayout';
+import { DOCS_URL } from '@/lib/docs-url';
 import { trackPageEvent } from '@/services/analyticsService';
 import ScrollReveal from '@/components/landing/ScrollReveal';
 import EditorAgentCards from '@/components/landing/EditorAgentCards';
@@ -17,21 +17,10 @@ const INSTALL_CMD = 'npm install -g @staplehire/staplehire-cli';
 const SKILL_CMD = 'staplehire skills install';
 const KEY_CMD = 'export STAPLEHIRE_KEY="sh_live_your_key_here"';
 const NPM_URL = 'https://www.npmjs.com/package/@staplehire/staplehire-cli';
-const DOCS_URL = '/docs/index';
-const APP_URL = 'https://app.staplehire.com';
 
 /* ------------------------------------------------------------------ */
 /* Primitives                                                          */
 /* ------------------------------------------------------------------ */
-
-/** Monospace bracket section label, e.g. `[ Install ]` — sits on a dotted rule. */
-function SectionTag({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70">
-      [ {children} ]
-    </span>
-  );
-}
 
 function useCopy(text: string, event?: string) {
   const [copied, setCopied] = useState(false);
@@ -63,33 +52,8 @@ function CopyButton({ text, event, label }: { text: string; event?: string; labe
   );
 }
 
-/** A flat outlined button with corner brackets (AgentMail-style secondary action). */
-function BracketLink({
-  href,
-  children,
-  onClick,
-  external,
-}: {
-  href: string;
-  children: React.ReactNode;
-  onClick?: () => void;
-  external?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      onClick={onClick}
-      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-      className="group relative inline-flex h-[46px] items-center justify-center px-6 font-mono text-[13px] uppercase tracking-[0.12em] text-foreground transition-colors hover:text-primary"
-    >
-      <span className="pointer-events-none absolute left-0 top-0 size-2.5 border-l border-t border-foreground/30 transition-colors group-hover:border-primary" />
-      <span className="pointer-events-none absolute right-0 top-0 size-2.5 border-r border-t border-foreground/30 transition-colors group-hover:border-primary" />
-      <span className="pointer-events-none absolute bottom-0 left-0 size-2.5 border-b border-l border-foreground/30 transition-colors group-hover:border-primary" />
-      <span className="pointer-events-none absolute bottom-0 right-0 size-2.5 border-b border-r border-foreground/30 transition-colors group-hover:border-primary" />
-      {children}
-    </a>
-  );
-}
+const secondaryLinkClass =
+  'inline-flex h-[46px] items-center font-mono text-[13px] uppercase tracking-[0.12em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline';
 
 /* ------------------------------------------------------------------ */
 /* Syntax-highlighted code rendering (lightweight, token-based)        */
@@ -297,94 +261,26 @@ function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: bo
 /* ------------------------------------------------------------------ */
 
 function CliLandingPage() {
-  const { isDark, toggleDarkMode } = useTheme();
-  const [navScrolled, setNavScrolled] = useState(false);
-
   useEffect(() => {
     document.title = 'Staplehire CLI — a recruiting tool for your AI agents';
     trackPageEvent('cli_landing_viewed');
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setNavScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <DevGridShell className="text-foreground overflow-x-clip">
-      {/* ---------------- Nav (mirrors SiteHeader; CLI active) ---------------- */}
-      <header>
-        <nav
-          className={`sticky top-0 z-50 transition-all duration-300 ${
-            navScrolled
-              ? 'border-b border-[rgba(214,235,253,0.12)] bg-background/70 backdrop-blur-xl'
-              : 'border-b border-transparent bg-transparent'
-          }`}
-        >
-          <DevGridContainer>
-            <div className="flex h-[72px] items-center justify-between md:h-[80px]">
-              <a href="/" className="cursor-pointer" aria-label="Staplehire home">
-                <Logo size="md" />
-              </a>
+    <SiteLayout activePage="cli">
+      <DevGridShell className="text-foreground overflow-x-clip">
+        <DevGridRule />
 
-              <div className="hidden items-center gap-7 md:flex">
-                <a href="/#features" className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground">
-                  Features
-                </a>
-                <a href="/cli" aria-current="page" className="text-[14px] font-medium tracking-[0.01em] text-foreground">
-                  CLI
-                </a>
-                <a href="/docs/index" className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground">
-                  Docs
-                </a>
-                <a href="/blog" className="text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground">
-                  Blog
-                </a>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={toggleDarkMode}
-                  className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label="Toggle theme"
-                >
-                  {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-                </button>
-                <a href={`${APP_URL}/login`} className="hidden text-[14px] font-medium tracking-[0.01em] text-muted-foreground transition-colors hover:text-foreground sm:inline">
-                  Sign in
-                </a>
-                <a href="#get-started" onClick={() => trackPageEvent('cli_cta_click', { location: 'nav' })}>
-                  <Button className="h-[40px] rounded-full px-5 text-[14px] font-semibold shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-primary/30">
-                    Get started
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </DevGridContainer>
-        </nav>
-      </header>
-
-      <DevGridRule />
-
-      <main>
+        <main id="main">
         {/* ---------------- Hero ---------------- */}
-        <section className="relative isolate pt-16 pb-20 md:pt-24 md:pb-28">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px]">
-            <div className="absolute left-1/2 top-[-40px] h-[440px] w-[820px] -translate-x-1/2 bg-[radial-gradient(50%_60%_at_50%_0%,rgba(255,103,1,0.07),transparent_72%)] blur-[30px]" />
-            <div className="absolute left-[14%] top-[140px] h-[260px] w-[260px] bg-[radial-gradient(circle,rgba(85,171,237,0.05),transparent_70%)] blur-[60px]" />
-            <div className="absolute right-[14%] top-[110px] h-[240px] w-[240px] bg-[radial-gradient(circle,rgba(181,150,229,0.05),transparent_70%)] blur-[60px]" />
-          </div>
-
+        <section className="pt-16 pb-20 md:pt-24 md:pb-28">
           <DevGridContainer className="max-w-[860px]">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-7 inline-flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground"
+              className="mb-7 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground"
             >
-              <span className="inline-block size-1.5 rounded-full bg-primary shadow-[0_0_8px_2px_rgba(255,103,1,0.5)]" />
               Terminal + AI agents
             </motion.div>
 
@@ -419,9 +315,13 @@ function CliLandingPage() {
                   Install the CLI
                 </Button>
               </a>
-              <BracketLink href={DOCS_URL} onClick={() => trackPageEvent('cli_docs_click', { location: 'hero' })}>
+              <a
+                href={DOCS_URL}
+                onClick={() => trackPageEvent('cli_docs_click', { location: 'hero' })}
+                className={secondaryLinkClass}
+              >
                 Docs
-              </BracketLink>
+              </a>
             </motion.div>
 
             <motion.div
@@ -444,9 +344,6 @@ function CliLandingPage() {
         {/* ---------------- Install ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
-            <ScrollReveal className="mb-3">
-              <SectionTag>Install</SectionTag>
-            </ScrollReveal>
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <ScrollReveal>
                 <h2 className="typography-h2 text-balance">Two commands</h2>
@@ -455,13 +352,19 @@ function CliLandingPage() {
                   browser and set an API key instead.
                 </p>
                 <div className="mt-7 flex flex-wrap items-center gap-4">
-                  <BracketLink href={NPM_URL} external onClick={() => trackPageEvent('cli_npm_link')}>
+                  <a
+                    href={NPM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackPageEvent('cli_npm_link')}
+                    className={secondaryLinkClass}
+                  >
                     npm
-                  </BracketLink>
+                  </a>
                   <a
                     href={DOCS_URL}
                     onClick={() => trackPageEvent('cli_docs_click', { location: 'install' })}
-                    className="font-mono text-[13px] uppercase tracking-[0.12em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                    className={secondaryLinkClass}
                   >
                     Installation guide →
                   </a>
@@ -485,9 +388,6 @@ function CliLandingPage() {
         {/* ---------------- Why ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
-            <ScrollReveal className="mb-3">
-              <SectionTag>Why</SectionTag>
-            </ScrollReveal>
             <ScrollReveal>
               <h2 className="typography-h2 max-w-[18ch] text-balance">
                 Why your agent needs its own recruiter
@@ -514,9 +414,6 @@ function CliLandingPage() {
         {/* ---------------- Working code ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
-            <ScrollReveal className="mb-3">
-              <SectionTag>Code</SectionTag>
-            </ScrollReveal>
             <ScrollReveal>
               <h2 className="typography-h2 text-balance">Working code</h2>
               <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
@@ -535,9 +432,6 @@ function CliLandingPage() {
         {/* ---------------- Editors / agents ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
-            <ScrollReveal className="mb-3">
-              <SectionTag>Editors</SectionTag>
-            </ScrollReveal>
             <ScrollReveal>
               <h2 className="typography-h2 max-w-[22ch] text-balance">
                 Wire hiring into your agent of choice
@@ -564,9 +458,6 @@ function CliLandingPage() {
         {/* ---------------- FAQ ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
-            <ScrollReveal className="mb-3">
-              <SectionTag>FAQ</SectionTag>
-            </ScrollReveal>
             <div className="grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16">
               <ScrollReveal>
                 <h2 className="typography-h2 text-balance">FAQ</h2>
@@ -615,78 +506,9 @@ function CliLandingPage() {
             </ScrollReveal>
           </DevGridContainer>
         </section>
-      </main>
-
-      <DevGridRule />
-
-      {/* ---------------- Footer ---------------- */}
-      <footer className="py-12 md:py-16">
-        <DevGridContainer>
-          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-            <div className="flex flex-col gap-4">
-              <Logo size="footer" />
-              <p className="para-sm max-w-[34ch] text-muted-foreground">
-                A recruiting tool for your terminal and AI agents.
-              </p>
-              <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                <span className="inline-block size-1.5 rounded-full bg-[var(--sh-build-text)] shadow-[0_0_8px_1px_var(--sh-build-text)]" />
-                All systems online
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-x-12 gap-y-2 sm:grid-cols-3">
-              <FooterCol title="Product" links={[
-                { label: 'Features', href: '/#features' },
-                { label: 'Product', href: '/' },
-                { label: 'Open app', href: `${APP_URL}/dashboard`, external: true },
-              ]} />
-              <FooterCol title="CLI" links={[
-                { label: 'Docs', href: DOCS_URL },
-                { label: 'npm', href: NPM_URL, external: true },
-                { label: 'Command reference', href: '/docs/commands' },
-              ]} />
-              <FooterCol title="More" links={[
-                { label: 'Blog', href: '/blog' },
-                { label: 'Sign in', href: `${APP_URL}/login`, external: true },
-              ]} />
-            </div>
-          </div>
-
-          <div className="mt-10 border-t border-foreground/10 pt-6">
-            <p className="para-sm text-muted-foreground">
-              © {new Date().getFullYear()} Staplehire. CLI for agents &amp; terminals.
-            </p>
-          </div>
-        </DevGridContainer>
-      </footer>
-    </DevGridShell>
-  );
-}
-
-function FooterCol({
-  title,
-  links,
-}: {
-  title: string;
-  links: { label: string; href: string; external?: boolean }[];
-}) {
-  return (
-    <div>
-      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground/60">{title}</p>
-      <ul className="mt-3 flex flex-col gap-2">
-        {links.map((l) => (
-          <li key={l.label}>
-            <a
-              href={l.href}
-              {...(l.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className="text-[14px] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {l.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </div>
+        </main>
+      </DevGridShell>
+    </SiteLayout>
   );
 }
 
