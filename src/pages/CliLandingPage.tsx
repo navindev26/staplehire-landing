@@ -397,35 +397,6 @@ function CliLandingPage() {
 
         <DevGridRule />
 
-        {/* ---------------- Why ---------------- */}
-        <section className="py-16 md:py-24">
-          <DevGridContainer>
-            <ScrollReveal>
-              <h2 className="typography-h2 max-w-[20ch] text-balance">
-                Full pipeline coverage, tuned for the terminal
-              </h2>
-              <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
-                Anything you can do in the Staplehire app is available in the CLI, too.
-              </p>
-            </ScrollReveal>
-            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.06] sm:grid-cols-3">
-              {WHY.map((item, i) => (
-                <ScrollReveal key={item.title} delay={0.04 * i} className="h-full">
-                  <div className="flex h-full flex-col bg-background p-6 md:p-7">
-                    <span className="font-mono text-[12px] text-primary">{String(i + 1).padStart(2, '0')}</span>
-                    <h3 className="typography-h3 mt-4 text-[19px] font-medium text-foreground sm:text-[20px]">
-                      {item.title}
-                    </h3>
-                    <p className="para mt-3 text-muted-foreground">{item.body}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </DevGridContainer>
-        </section>
-
-        <DevGridRule />
-
         {/* ---------------- Working code ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
@@ -467,6 +438,35 @@ function CliLandingPage() {
                 <Line tokens={[{ t: '# → .agents/skills/staplehire, .claude/…, .cursor/…', c: C.comment }]} />
               </CodeCard>
             </ScrollReveal>
+          </DevGridContainer>
+        </section>
+
+        <DevGridRule />
+
+        {/* ---------------- Why ---------------- */}
+        <section className="py-16 md:py-24">
+          <DevGridContainer>
+            <ScrollReveal>
+              <h2 className="typography-h2 max-w-[20ch] text-balance">
+                Full pipeline coverage, tuned for the terminal
+              </h2>
+              <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
+                Anything you can do in the Staplehire app is available in the CLI, too.
+              </p>
+            </ScrollReveal>
+            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.06] sm:grid-cols-3">
+              {WHY.map((item, i) => (
+                <ScrollReveal key={item.title} delay={0.04 * i} className="h-full">
+                  <div className="flex h-full flex-col bg-background p-6 md:p-7">
+                    <span className="font-mono text-[12px] text-primary">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 className="typography-h3 mt-4 text-[19px] font-medium text-foreground sm:text-[20px]">
+                      {item.title}
+                    </h3>
+                    <p className="para mt-3 text-muted-foreground">{item.body}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
           </DevGridContainer>
         </section>
 
