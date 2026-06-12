@@ -1,21 +1,26 @@
 ---
-title: "Add a candidate with the Staplehire CLI"
-description: "Add a candidate to a Staplehire role by email, name, stage, and profile fields from the CLI."
+title: "Add a candidate"
+description: "Add a candidate to a Staplehire role by email, name, stage, and profile fields from the CLI, move them between stages, and read their record."
 sidebarTitle: "Add a candidate"
 ---
 
-Add a candidate to a role with `candidates create`. The command is idempotent per role and email.
+Add a candidate to a role with `candidates create`. You must place them in a stage, and the command is idempotent per role and email.
 
 ```bash
-staplehire candidates create <roleId> --email alex@company.com --name "Alex Chen"
+staplehire candidates create <roleId> --email alex@example.com --name "Alex Chen" --stage "Sourced"
 ```
 
-## Quickstart
+<Note>
+  Create at least one [stage](/stages-cli) on the role first. `candidates create` requires either `--stage <name>` or `--stage-id <id>`.
+</Note>
+
+## Add a candidate
 
 ```bash
 staplehire candidates create 550e8400-e29b-41d4-a716-446655440000 \
-  --email alex@company.com \
-  --name "Alex Chen"
+  --email alex@example.com \
+  --name "Alex Chen" \
+  --stage "Sourced"
 ```
 
 Example output:
@@ -23,90 +28,96 @@ Example output:
 ```json
 {
   "candidate": {
-    "id": "cand_...",
-    "email": "alex@company.com",
+    "id": "cand_…",
+    "email": "alex@example.com",
     "name": "Alex Chen",
     "role_id": "550e8400-e29b-41d4-a716-446655440000",
-    "stage_id": "stage_..."
+    "stage_id": "stage_…"
   }
 }
 ```
 
-Extract the candidate ID:
+Capture the candidate ID:
 
 ```bash
-CANDIDATE_ID=$(staplehire candidates create <roleId> --email alex@company.com --name "Alex Chen" | jq -r '.candidate.id')
+CANDIDATE_ID=$(staplehire candidates create "$ROLE_ID" \
+  --email alex@example.com --name "Alex Chen" --stage "Sourced" \
+  | jq -r '.candidate.id')
 ```
 
-## Parameters
+### Parameters
 
 | Flag | Required | Description |
 | --- | --- | --- |
 | `<roleId>` | Yes | Role to add the candidate to |
 | `--email <email>` | Yes | Candidate email address |
+| `--stage <name>` | One of the stage flags | Stage name resolved on the role |
+| `--stage-id <id>` | One of the stage flags | Stage ID (takes precedence if both are passed) |
 | `--name <name>` | No | Display name |
-| `--stage-id <id>` | No | Pipeline stage ID |
-| `--stage <name>` | No | Stage name resolved on the role |
-| `--phone` | No | Candidate phone number |
-| `--linkedin-url` | No | LinkedIn profile URL |
-| `--portfolio-url` | No | Portfolio URL |
-| `--current-location` | No | Candidate location |
+| `--phone <phone>` | No | Phone number |
+| `--linkedin-url <url>` | No | LinkedIn profile URL |
+| `--portfolio-url <url>` | No | Portfolio URL |
+| `--current-location <loc>` | No | Candidate location |
+
+<Warning>
+  You must pass `--stage` **or** `--stage-id`. Omitting both fails with exit code `3` (validation). If you pass both, `--stage-id` wins.
+</Warning>
 
 ## Examples
 
-### Add a candidate to a named stage
+### Add with profile links
 
 ```bash
 staplehire candidates create <roleId> \
-  --email alex@company.com \
-  --name "Alex Chen" \
-  --stage "Applied"
-```
-
-### Add profile links
-
-```bash
-staplehire candidates create <roleId> \
-  --email alex@company.com \
+  --email alex@example.com \
   --name "Alex Chen" \
   --linkedin-url https://linkedin.com/in/alexchen \
-  --portfolio-url https://alex.dev
+  --portfolio-url https://alex.dev \
+  --current-location "Sydney, AU" \
+  --stage "Sourced"
 ```
 
-### Move a candidate to a new stage
+### Move a candidate to another stage
 
 ```bash
 staplehire candidates move <candidateId> --stage-id <stageId>
 ```
 
+```json
+{ "candidate": { "id": "cand_…", "stage_id": "stage_…" } }
+```
+
 ## Read candidates
 
 ```bash
-staplehire candidates list --role-id <roleId>
-staplehire candidates get <candidateId>
-staplehire candidates screening-result <candidateId>
+staplehire candidates list --role-id <roleId>          # all on a role
+staplehire candidates list --email alex@example.com    # exact email match
+staplehire candidates list --q "alex"                  # search name/email
+staplehire candidates get <candidateId>                # one candidate
+staplehire candidates screening-result <candidateId>   # latest fit/screening result
 ```
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `ValidationError` | Invalid email or missing required flag | Pass a valid `--email` and role ID |
-| `ConflictError` | Duplicate candidate on the role | Fetch the existing candidate instead of creating another |
-| `NotFoundError` | Role or stage does not exist | Run `roles list` or `stages list <roleId>` |
+| `ValidationError` | `3` | Invalid email, or no `--stage`/`--stage-id` — fix the field in `error.hint` |
+| `candidate_already_exists` | `5` | The email already exists on this role — [find and move the existing candidate](/stages-cli#recover-from-a-duplicate-candidate-409) |
+| `stage_not_found` | `4` | Run `staplehire stages list <roleId>` and use a real stage |
+| `role_not_found` | `4` | Confirm the role ID with `staplehire roles list` |
 
 ## FAQ
 
-### Can I add the same email twice?
+<AccordionGroup>
+  <Accordion title="Can I add the same email twice?">
+    Not on the same role — it returns `candidate_already_exists` (exit `5`). Read or move the existing candidate instead. The same email on a different role is a separate candidate.
+  </Accordion>
+  <Accordion title="Should I use `--stage` or `--stage-id`?">
+    Use `--stage-id` when you already have the ID. Use `--stage` to let the CLI resolve a stage name on the role. If both are given, `--stage-id` is used.
+  </Accordion>
+  <Accordion title="Is there an alias for `candidates create`?">
+    Yes — `candidates add` is a deprecated alias. Prefer `create`.
+  </Accordion>
+</AccordionGroup>
 
-The command is idempotent per role and email. If the API returns a conflict, read the existing candidate.
-
-### Should I use `--stage` or `--stage-id`?
-
-Use `--stage-id` when you have the ID. Use `--stage` when you want the CLI to resolve a stage name on the role.
-
-### What is the alias for `candidates create`?
-
-`add` is an alias.
-
-Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Enrich a candidate with the Staplehire CLI](/enrich-candidate-cli) · [Send an interview with the Staplehire CLI](/send-interview-cli)
+Related: [Manage stages](/stages-cli) · [Enrich a candidate](/enrich-candidate-cli) · [Send an interview](/send-interview-cli)

@@ -1,34 +1,30 @@
 ---
-title: "Send an interview with the Staplehire CLI"
-description: "Create an interview design and send a Staplehire interview invite or link from the CLI."
+title: "Send an interview"
+description: "Create an AI interview design for a role with the Staplehire CLI, send the screening invite to a candidate by email, or generate an apply link."
 sidebarTitle: "Send an interview"
 ---
 
-Create an interview design for a role, then send it to a candidate or generate a link.
+An **interview design** is the AI screening script for a role. Generate one, then either email the invite to a candidate (`send-interview`) or generate an apply link without sending email (`interview-link`).
 
 ```bash
-DESIGN_ID=$(staplehire designs create <roleId> --type structured --brief "Async screening." | jq -r '.interview_design.id')
+DESIGN_ID=$(staplehire designs create <roleId> --type structured | jq -r '.interview_design.id')
 staplehire candidates send-interview <candidateId> --design "$DESIGN_ID"
 ```
 
-## Quickstart
+## 1. Create an interview design
 
 ```bash
 DESIGN_ID=$(staplehire designs create <roleId> \
   --type structured \
-  --brief "Async screening for backend fundamentals." \
+  --brief "Async screen for backend fundamentals and system design." \
   --round-title "Backend screen" \
   | jq -r '.interview_design.id')
-
-staplehire candidates send-interview <candidateId> --design "$DESIGN_ID"
 ```
-
-Example design output:
 
 ```json
 {
   "interview_design": {
-    "id": "design_...",
+    "id": "design_…",
     "role_id": "550e8400-e29b-41d4-a716-446655440000",
     "type": "structured",
     "round_title": "Backend screen"
@@ -36,65 +32,96 @@ Example design output:
 }
 ```
 
-## Parameters
+### Parameters — `designs create`
 
-| Command | Flag | Required | Description |
-| --- | --- | --- | --- |
-| `designs create` | `<roleId>` | Yes | Role for the interview design |
-| `designs create` | `--type <type>` | No | Interview design type, for example `structured` |
-| `designs create` | `--brief <text>` | No | Instructions for the generated design |
-| `designs create` | `--round-title <title>` | No | Candidate-facing interview round title |
-| `candidates send-interview` | `<candidateId>` | Yes | Candidate to invite |
-| `candidates send-interview` | `--design <designId>` | Yes | Interview design to send |
-| `candidates send-interview` | \`--mode email | link\` | No | Send email or return a link |
+| Flag | Required | Description |
+| --- | --- | --- |
+| `<roleId>` | Yes | Role the design belongs to |
+| `--type <type>` | No | `structured` (default) or `conversational` |
+| `--brief <text>` | No | Focus areas for the AI interviewer |
+| `--round-title <title>` | No | Round label shown to the candidate |
 
-## Examples
+<Note>
+  `--type` only accepts `structured` or `conversational`. Any other value fails with exit code `8` (CLI usage).
+</Note>
 
-### Send an interview email
+## 2. Send the interview
+
+Email the candidate a screening invitation containing their apply link.
 
 ```bash
-staplehire candidates send-interview <candidateId> --design <designId> --mode email
+staplehire candidates send-interview <candidateId> --design <designId>
 ```
 
-### Generate an interview link
+### Parameters — `candidates send-interview`
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `<candidateId>` | Yes | Candidate to invite |
+| `--design <designId>` | Yes | Interview design ID from `designs create` |
+| `--mode <mode>` | No | Delivery mode; defaults to `email` |
+
+<Tip>
+  To get a link **without** sending an email, use `candidates interview-link` (below) rather than a `--mode` value. That's the supported way to retrieve a shareable apply link.
+</Tip>
+
+## Generate an apply link (no email)
 
 ```bash
 staplehire candidates interview-link <candidateId> --design <designId>
 ```
 
-Example output:
-
 ```json
-{ "interview_link": "https://app.staplehire.com/apply/..." }
+{ "interview_link": "https://app.staplehire.com/apply/…" }
 ```
 
-### List interview sessions
+Extract just the link:
+
+```bash
+staplehire candidates interview-link <candidateId> --design <designId> | jq -r '.interview_link'
+```
+
+## List and inspect designs
+
+```bash
+staplehire designs list <roleId>      # all designs on a role
+staplehire designs get <designId>     # one design
+```
+
+## Track interview sessions
+
+Sessions appear once candidates start completing screening. They're empty until then.
 
 ```bash
 staplehire sessions list <roleId>
-staplehire sessions list <roleId> --candidate-email alex@company.com
+staplehire sessions list <roleId> --candidate-email alex@example.com
+```
+
+```json
+{ "bundles": [ … ] }
 ```
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `NotFoundError` | Candidate or design ID is wrong | Use `candidates get` and `designs get` |
-| `ValidationError` | Missing `--design` | Pass the design ID returned by `designs create` |
-| `PermissionError` | Key cannot send invites | Check organization permissions |
+| `interview_design_required` | `3` | Create a design with `designs create` first |
+| `ValidationError` | `3` | Missing `--design` — pass the ID from `designs create` |
+| `NotFoundError` | `4` | Wrong candidate or design ID — use `candidates get` / `designs get` |
+| CLI usage | `8` | `--type` must be `structured` or `conversational` |
 
 ## FAQ
 
-### Do I need a design before sending an interview?
+<AccordionGroup>
+  <Accordion title="Do I need a design before sending an interview?">
+    Yes. Create one with `staplehire designs create`, then pass its ID to `send-interview` or `interview-link`.
+  </Accordion>
+  <Accordion title="How do I get a link instead of emailing the candidate?">
+    Use `staplehire candidates interview-link <candidateId> --design <designId>`. It returns `interview_link` without sending an email.
+  </Accordion>
+  <Accordion title="What are the deprecated aliases?">
+    `interview-design` is a deprecated alias for `designs`, and `interview-sessions` is a deprecated alias for `sessions`. Both still work.
+  </Accordion>
+</AccordionGroup>
 
-Yes. Create a design with `staplehire designs create`, then pass its ID to `candidates send-interview`.
-
-### Can I get a link instead of sending email?
-
-Yes. Use `candidates interview-link` or `send-interview --mode link`.
-
-### What are deprecated aliases?
-
-`interview-design` is a deprecated alias for `designs`, and `interview-sessions` is a deprecated alias for `sessions`.
-
-Related: [Add a candidate with the Staplehire CLI](/add-candidate-cli) · [Command reference](/commands) · [CLI errors](/cli-errors)
+Related: [Add a candidate](/add-candidate-cli) · [Send an email](/send-email-cli) · [Command reference](/commands)

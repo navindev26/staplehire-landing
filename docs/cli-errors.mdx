@@ -1,10 +1,10 @@
 ---
-title: "Staplehire CLI errors"
-description: "Fix Staplehire CLI authentication, validation, permission, conflict, upstream, usage, and job timeout errors."
+title: "CLI errors"
+description: "Understand Staplehire CLI exit codes and structured error JSON — authentication, validation, not found, conflict, permission, upstream, usage, and job timeout — and how to recover."
 sidebarTitle: "CLI errors"
 ---
 
-Staplehire CLI failures return structured JSON on stderr and stable exit codes so humans, scripts, and agents can recover predictably.
+Staplehire CLI failures print one structured JSON object to **stderr** and exit with a **stable, non-zero code**, so humans, scripts, and agents can recover predictably. Branch on the **exit code** first, then on `error.code`.
 
 ```json
 {
@@ -14,77 +14,79 @@ Staplehire CLI failures return structured JSON on stderr and stable exit codes s
     "message": "Invalid email address",
     "hint": "Use a valid email format",
     "field": "email",
-    "requestId": "req_...",
+    "requestId": "req_…",
     "status": 400
   }
 }
 ```
 
-## Quickstart
+<Warning>
+  Never grep `error.message` — the wording can change. Parse `error.code` (stable) and read `error.hint` / `error.field` to fix the request. Log `error.requestId` when contacting support.
+</Warning>
 
-Run `doctor` first when a command fails unexpectedly.
+## First step when a command fails
 
 ```bash
 staplehire doctor -q
 ```
 
-Then inspect the command-specific error JSON on stderr.
+Then capture the command's stderr and inspect the error:
 
 ```bash
-staplehire candidates create <roleId> --email not-an-email 2> error.json
+staplehire candidates create <roleId> --email not-an-email --stage Sourced 2> error.json
 jq '.error' error.json
 ```
 
 ## Exit codes
 
-| Code | Meaning | Typical fix |
-| --- | --- | --- |
-| `1` | Generic or internal error | Retry or inspect `requestId` |
-| `2` | Authentication, usually `401` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
-| `3` | Validation, usually `400` | Fix the flagged field or missing argument |
-| `4` | Not found, usually `404` | List resources and use a real ID |
-| `5` | Conflict, usually `409` | Reuse the existing resource or change unique fields |
-| `6` | Permission, usually `403` | Check key organization and user permissions |
-| `7` | Upstream, usually `502` | Retry later or contact support with `requestId` |
-| `8` | CLI usage or bad args | Run `staplehire <command> --help` or `staplehire commands` |
-| `9` | Poll timeout | Re-run `jobs poll` with a longer timeout |
+| Code | HTTP | Meaning | Typical fix |
+| --- | --- | --- | --- |
+| `0` | — | Success | Parse stdout |
+| `1` | other | Generic / internal | Retry; inspect `error.requestId` and escalate |
+| `2` | 401 | Authentication | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+| `3` | 400 | Validation | Fix the field named in `error.field` / `error.hint` |
+| `4` | 404 | Not found | Re-list the parent resource and use a real ID |
+| `5` | 409 | Conflict | Reuse the existing resource or change unique fields |
+| `6` | 403 | Permission | Check the key's organization and scope |
+| `7` | 502 | Upstream | Retry with backoff |
+| `8` | — | CLI usage / bad args | Run `staplehire <command> --help` or `staplehire commands` |
+| `9` | — | `jobs poll` timeout | Re-run `jobs poll` with a higher `--timeout`, or use `jobs get` |
 
-## AuthenticationError
+## Common `error.code` values
+
+| Code | Resolution |
+| --- | --- |
+| `candidate_email_invalid` | Fix the email syntax |
+| `candidate_already_exists` | The email exists on this role — [find and move](/stages-cli#recover-from-a-duplicate-candidate-409) the existing candidate |
+| `stage_name_already_exists` | Reuse the stage or pick a new name |
+| `stage_not_found` | Run `staplehire stages list <roleId>` |
+| `role_not_found` | Confirm the role created successfully (`roles list`) |
+| `interview_design_required` | Run `designs create` before sending an interview |
+| `job_failed` | Read `error.message`; fix inputs or retry with `--force` |
+| `api_key_invalid` | Create a new key — see [Authentication](/authentication) |
+| `api_key_revoked` | Issue a new key in Settings → Developers |
+| `org_not_provisioned` | Contact support |
+
+## Error types
+
+### AuthenticationError (exit 2)
 
 The CLI could not resolve or validate an API key.
 
 ```bash
-staplehire login
-staplehire whoami
-```
-
-For CI and agents:
-
-```bash
+staplehire login          # local
+# or, for agents and CI:
 export STAPLEHIRE_KEY=sh_live_xxx
 staplehire doctor -q
 ```
 
-## ValidationError
+### ValidationError (exit 3)
 
-A required value is missing or invalid.
+A required value is missing or invalid. Fix the field named by `.error.field`, then rerun.
 
-```json
-{
-  "error": {
-    "name": "ValidationError",
-    "code": "candidate_email_invalid",
-    "field": "email",
-    "message": "Invalid email address"
-  }
-}
-```
+### NotFoundError (exit 4)
 
-Fix the field named by `.error.field`, then rerun the command.
-
-## NotFoundError
-
-A role, candidate, design, stage, or job ID does not exist or is not visible to the current organization.
+A role, candidate, design, stage, or job ID does not exist or isn't visible to your organization.
 
 ```bash
 staplehire roles list
@@ -93,35 +95,55 @@ staplehire designs list <roleId>
 staplehire jobs get <jobId>
 ```
 
-## ConflictError
+### ConflictError (exit 5)
 
-A resource already exists, commonly a duplicate candidate email on the same role.
+A resource already exists — commonly a duplicate candidate email on the same role.
 
 ```bash
-staplehire candidates list --role-id <roleId> --email alex@company.com
+staplehire candidates list --role-id <roleId> --email alex@example.com
 ```
 
-## Poll timeout
+### Poll timeout (exit 9)
 
-Exit code `9` means `jobs poll` stopped waiting. It does not necessarily mean the job failed.
+`jobs poll` stopped waiting. It does **not** mean the job failed.
 
 ```bash
 staplehire jobs poll <jobId> --interval 5000 --timeout 300000
 staplehire jobs get <jobId>
 ```
 
+## Capture and branch in a shell script
+
+```bash
+if ! out=$(staplehire candidates create "$ROLE_ID" --email "$EMAIL" --stage Sourced 2> err.json); then
+  code=$?
+  err=$(jq -r '.error.code // "unknown"' err.json)
+  echo "failed (exit $code): $err" >&2
+  case "$err" in
+    candidate_already_exists) echo "→ move the existing candidate instead" >&2 ;;
+    stage_not_found)          staplehire stages list "$ROLE_ID" ;;
+  esac
+  exit "$code"
+fi
+echo "$out" | jq -r '.candidate.id'
+```
+
+<Note>
+  **Agent loop rule:** if the same `error.code` repeats with the same payload, change the inputs or stop — do not retry blindly.
+</Note>
+
 ## FAQ
 
-### Where does error JSON print?
+<AccordionGroup>
+  <Accordion title="Where does error JSON print?">
+    To stderr. Successful data prints to stdout, so you can pipe stdout cleanly while still capturing errors separately.
+  </Accordion>
+  <Accordion title="What should I send to support?">
+    The `error.requestId`, the exact command, and the timestamp.
+  </Accordion>
+  <Accordion title="Why did `jobs poll` exit with code 9?">
+    The `--timeout` elapsed. The job may still be running — inspect it with `jobs get` or poll again.
+  </Accordion>
+</AccordionGroup>
 
-Errors print to stderr. Successful data prints to stdout.
-
-### What should I send to support?
-
-Send `.error.requestId`, the command, and the timestamp.
-
-### Why did `jobs poll` exit with code 9?
-
-The timeout elapsed. The job may still be running, so inspect it with `jobs get` or poll again.
-
-Related: [Authenticate the Staplehire CLI](/authentication) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [Command reference](/commands)
+Related: [Authentication](/authentication) · [Poll jobs](/poll-agent-jobs) · [Command reference](/commands)

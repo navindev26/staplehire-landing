@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Staplehire CLI",
-  "description": "Run hiring workflows from the terminal with the Staplehire CLI: source candidates, create roles, send interviews, enrich research, and automate with JSON output.",
+  "description": "Run hiring workflows from the terminal with the Staplehire CLI: create roles, source candidates, send AI interviews, enrich research, and automate everything with JSON output built for scripts and AI agents.",
   "colors": {
     "primary": "#FF6701",
     "light": "#FF7A1A",
@@ -32,7 +32,8 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/staplehire/staplehire-cli"
+      "github": "https://github.com/navindev26/Staplehire",
+      "website": "https://staplehire.com"
     }
   },
   "contextual": {
@@ -40,7 +41,6 @@
     "display": "header"
   },
   "redirects": [
-    { "source": "/quickstart", "destination": "/installation", "permanent": true },
     { "source": "/cli/overview", "destination": "/", "permanent": true },
     { "source": "/cli/installation", "destination": "/installation", "permanent": true },
     { "source": "/cli/commands", "destination": "/commands", "permanent": true },
@@ -49,25 +49,44 @@
   "navigation": {
     "groups": [
       {
-        "group": "CLI",
-        "icon": {
-          "name": "terminal",
-          "library": "lucide"
-        },
+        "group": "Get started",
+        "icon": { "name": "rocket", "library": "lucide" },
         "pages": [
           "index",
           "installation",
           "authentication",
-          "source-candidates-cli",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Workflows",
+        "icon": { "name": "workflow", "library": "lucide" },
+        "pages": [
           "create-role-cli",
+          "stages-cli",
           "add-candidate-cli",
-          "send-interview-cli",
           "enrich-candidate-cli",
-          "poll-agent-jobs",
-          "use-staplehire-cli-in-ci",
-          "cli-errors",
+          "send-interview-cli",
+          "send-email-cli",
+          "source-candidates-cli",
+          "search-cli",
+          "poll-agent-jobs"
+        ]
+      },
+      {
+        "group": "Automation",
+        "icon": { "name": "bot", "library": "lucide" },
+        "pages": [
+          "ai-agents",
+          "use-staplehire-cli-in-ci"
+        ]
+      },
+      {
+        "group": "Reference",
+        "icon": { "name": "book-open", "library": "lucide" },
+        "pages": [
           "commands",
-          "ai-agents"
+          "cli-errors"
         ]
       }
     ]

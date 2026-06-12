@@ -1,10 +1,10 @@
 ---
-title: "Use the Staplehire CLI in CI"
-description: "Run Staplehire CLI commands in GitHub Actions or other CI systems with STAPLEHIRE_KEY and JSON output."
+title: "Use in CI"
+description: "Run Staplehire CLI commands in GitHub Actions, GitLab CI, or any pipeline with STAPLEHIRE_KEY and JSON output — no browser login required."
 sidebarTitle: "Use in CI"
 ---
 
-Set `STAPLEHIRE_KEY` as a CI secret, install the CLI, and use `-q` or piped JSON for automation.
+In CI, authenticate with `STAPLEHIRE_KEY` (never browser login), install the CLI, and rely on JSON output with stable [exit codes](/cli-errors) for assertions.
 
 ```yaml
 env:
@@ -14,75 +14,112 @@ steps:
   - run: staplehire doctor -q
 ```
 
-## Quickstart
+<Warning>
+  Do not run `staplehire login` in CI — it opens a browser and waits for an interactive callback. Always provide `STAPLEHIRE_KEY` as a secret.
+</Warning>
 
-Do not use `staplehire login` in CI. Browser login is for local development.
+## Set up the key
+
+Create an API key in [Settings → Developers](https://app.staplehire.com/settings/developers) and store it as a CI secret named `STAPLEHIRE_KEY`. Then verify it in the pipeline:
 
 ```bash
 npm install -g @staplehire/staplehire-cli
-staplehire doctor -q
-staplehire whoami | jq '.organization.id'
+staplehire doctor -q | jq -e '.ok'
+staplehire whoami | jq -r '.organization.id'
 ```
 
-## GitHub Actions example
+## CI examples
 
-```yaml
-name: Staplehire CLI
+<Tabs>
+  <Tab title="GitHub Actions">
+    ```yaml
+    name: Staplehire CLI
 
-on:
-  workflow_dispatch:
+    on:
+      workflow_dispatch:
 
-jobs:
-  staplehire:
-    runs-on: ubuntu-latest
-    env:
-      STAPLEHIRE_KEY: ${{ secrets.STAPLEHIRE_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm install -g @staplehire/staplehire-cli
-      - run: staplehire doctor -q
-      - run: |
-          staplehire roles create --jd "On-call SRE. ${GITHUB_REPOSITORY} deploys." \
-            | jq -e '.role.id'
-```
+    jobs:
+      staplehire:
+        runs-on: ubuntu-latest
+        env:
+          STAPLEHIRE_KEY: ${{ secrets.STAPLEHIRE_KEY }}
+        steps:
+          - uses: actions/checkout@v4
+          - uses: actions/setup-node@v4
+            with:
+              node-version: "20"
+          - run: npm install -g @staplehire/staplehire-cli
+          - run: staplehire doctor -q | jq -e '.ok'
+          - name: Create a role
+            run: |
+              staplehire roles create \
+                --jd "On-call SRE for ${GITHUB_REPOSITORY}." \
+                | jq -e '.role.id'
+    ```
+  </Tab>
+  <Tab title="GitLab CI">
+    ```yaml
+    staplehire:
+      image: node:20
+      variables:
+        STAPLEHIRE_KEY: $STAPLEHIRE_KEY
+      script:
+        - npm install -g @staplehire/staplehire-cli
+        - staplehire doctor -q | jq -e '.ok'
+        - staplehire roles list | jq '.roles[].id'
+    ```
+  </Tab>
+  <Tab title="Plain shell">
+    ```bash
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export STAPLEHIRE_KEY="${STAPLEHIRE_KEY:?set STAPLEHIRE_KEY}"
+
+    npm install -g @staplehire/staplehire-cli
+    staplehire doctor -q | jq -e '.ok'
+    ROLE_ID=$(staplehire roles create --jd "Backend engineer…" | jq -er '.role.id')
+    echo "Created role $ROLE_ID"
+    ```
+  </Tab>
+</Tabs>
 
 ## Environment variables
 
 | Variable | Description |
 | --- | --- |
-| `STAPLEHIRE_KEY` | API key, for example `sh_live_...` or `sh_test_...` |
+| `STAPLEHIRE_KEY` | API key — `sh_live_…` (production) or `sh_test_…` (test) |
 | `STAPLEHIRE_API_URL` | Optional API gateway override |
-| `STAPLEHIRE_APP_URL` | Optional dashboard URL for `login` and `open` |
+| `STAPLEHIRE_APP_URL` | Optional dashboard URL (only affects `login` / `open`) |
 
-## Machine-readable output
+## Clean JSON output
 
-Use `-q`, `--json`, or a pipe when scripts need JSON without human status lines.
+Use `-q` (or pipe stdout) so scripts get JSON without human status lines. `jq -e` makes assertions fail the job when a field is missing.
 
 ```bash
-staplehire doctor -q | jq '.ok'
-staplehire roles list | jq '.roles[].id'
+staplehire doctor -q | jq -e '.ok'
+staplehire roles list | jq -e '.roles | length > 0'
 ```
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `AuthenticationError` | Secret is missing or empty | Add `STAPLEHIRE_KEY` to CI secrets |
-| `PermissionError` | Key lacks organization access | Create a key for the correct organization |
-| Exit code `8` | Bad CLI arguments | Run `staplehire commands` locally and pass required flags |
+| `AuthenticationError` | `2` | The `STAPLEHIRE_KEY` secret is missing or empty |
+| `PermissionError` | `6` | Key lacks access — create one for the correct organization |
+| CLI usage | `8` | Bad arguments — run `staplehire commands` locally and pass all required flags |
 
 ## FAQ
 
-### Should CI run `staplehire login`?
+<AccordionGroup>
+  <Accordion title="Should CI run `staplehire login`?">
+    No. `login` opens a browser. Set `STAPLEHIRE_KEY` as a secret instead.
+  </Accordion>
+  <Accordion title="`--json` or `-q`?">
+    Use `-q` for JSON-only output that also suppresses human status lines. Output is already JSON when stdout is piped, but `-q` guarantees it in any context.
+  </Accordion>
+  <Accordion title="Can CI create roles and candidates?">
+    Yes — if the key has permission and the command includes every required flag.
+  </Accordion>
+</AccordionGroup>
 
-No. `login` opens a browser. Use `STAPLEHIRE_KEY` instead.
-
-### Should I use `--json` or `-q`?
-
-Use `-q` for JSON-only output when a command may print human status in an interactive context.
-
-### Can CI create roles and candidates?
-
-Yes, if the API key has permission and the command includes all required flags.
-
-Related: [Authenticate the Staplehire CLI](/authentication) · [Command reference](/commands) · [CLI errors](/cli-errors)
+Related: [Authentication](/authentication) · [Use with AI agents](/ai-agents) · [Command reference](/commands)
