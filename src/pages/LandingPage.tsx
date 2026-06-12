@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import HeroInbox from '@/components/landing/HeroInbox';
 import ScrollReveal, { StaggerContainer, StaggerItem } from '@/components/landing/ScrollReveal';
 import FromJobToShortlistSection from '@/components/landing/FromJobToShortlistSection';
+import { LandingVideo } from '@/components/landing/LandingVideo';
 import VoiceWaveCanvas from '@/components/landing/VoiceWaveCanvas';
 
 const LandingPage: React.FC = () => {
@@ -22,25 +23,21 @@ const LandingPage: React.FC = () => {
     trackPageEvent('landing_viewed');
   }, []);
 
-  // Preload the alternate-theme gifs so toggling between dark/light is instant
+  // Preload the alternate-theme posters so toggling between dark/light shows
+  // the preview instantly while the matching video streams in.
   useEffect(() => {
-    const alternates = isDark
-      ? [
-          '/landing/sourcing-borderless.gif',
-          '/landing/research-flow.gif',
-          '/landing/manage-flow.gif',
-          '/landing/dashboard.gif',
-        ]
-      : [
-          '/landing/sourcing-borderless-dark.gif',
-          '/landing/research-flow-dark.gif',
-          '/landing/manage-flow-dark.gif',
-          '/landing/dashboard-dark.gif',
-        ];
+    const bases = [
+      '/landing/sourcing-borderless',
+      '/landing/research-flow',
+      '/landing/interview-reel',
+      '/landing/manage-flow',
+      '/landing/dashboard',
+    ];
+    const suffix = isDark ? '' : '-dark';
     const handle = window.setTimeout(() => {
-      alternates.forEach((src) => {
+      bases.forEach((base) => {
         const img = new Image();
-        img.src = src;
+        img.src = `${base}${suffix}-poster.jpg`;
       });
     }, 1500);
     return () => window.clearTimeout(handle);
@@ -105,12 +102,13 @@ const LandingPage: React.FC = () => {
         <div className="relative z-10 mx-auto min-h-0 w-full max-w-[1170px]">
           <ScrollReveal preset="scaleIn" amount={0}>
             <div className="overflow-hidden rounded-2xl border border-foreground/10 dark:border-white/15 bg-card shadow-2xl ring-1 ring-inset ring-white/0 dark:ring-white/5">
-              <img
-                src={isDark ? '/landing/sourcing-borderless-dark.gif' : '/landing/sourcing-borderless.gif'}
+              <LandingVideo
+                base="/landing/sourcing-borderless"
+                width={1920}
+                height={1080}
                 alt="Staplehire agent sourcing candidates"
                 className="relative z-10 block w-full h-auto rounded-2xl border-[0.5px] border-black dark:border-white"
-                loading="eager"
-                decoding="async"
+                eager
               />
             </div>
           </ScrollReveal>
@@ -180,12 +178,12 @@ const LandingPage: React.FC = () => {
           </StaggerContainer>
           <ScrollReveal preset="scaleIn">
             <div className="aspect-video overflow-hidden rounded-2xl border border-foreground/10 dark:border-white/15 bg-card shadow-2xl ring-1 ring-inset ring-white/0 dark:ring-white/5">
-              <img
-                src={isDark ? '/landing/dashboard-dark.gif' : '/landing/dashboard.gif'}
+              <LandingVideo
+                base="/landing/dashboard"
+                width={1920}
+                height={1080}
                 alt="Staplehire dashboard with ranked shortlist"
                 className="block size-full object-cover"
-                loading="lazy"
-                decoding="async"
               />
             </div>
           </ScrollReveal>
