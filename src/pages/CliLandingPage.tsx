@@ -142,8 +142,8 @@ const SCRIPT_LINES: Tok[][] = [
 ];
 
 const TABS = [
-  { id: 'prompt', label: 'Prompt your agent (Staplehire skill)', lines: PROMPT_LINES, copy: PROMPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
-  { id: 'script', label: 'Shell / CI script', lines: SCRIPT_LINES, copy: SCRIPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
+  { id: 'prompt', label: 'Agent mode', lines: PROMPT_LINES, copy: PROMPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
+  { id: 'script', label: 'Script mode', lines: SCRIPT_LINES, copy: SCRIPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
 ];
 
 function WorkingCode() {
@@ -190,16 +190,28 @@ function WorkingCode() {
 
 const WHY = [
   {
-    title: 'Runs the whole loop',
-    body: 'Create roles, source, enrich, screen, interview, and move stages — the same primitives your dashboard uses, exposed as stable commands.',
+    title: 'Agent skill included',
+    body: 'Ships with a skill for Cursor, Claude Code, Codex, and friends that documents best practices. Your agent learns the whole toolkit in one install.',
   },
   {
-    title: 'JSON in, JSON out',
-    body: 'Auto-detects a pipe and emits structured JSON on stdout. Errors are JSON on stderr with stable exit codes your agent can branch on.',
+    title: 'Roles & pipelines',
+    body: 'Create roles from a JD, define stages, and move candidates through your pipeline. Everything the dashboard does, from the shell.',
   },
   {
-    title: 'Discoverable by agents',
-    body: 'Ship a skill to Cursor, Claude Code, or Codex and run `staplehire commands` for a machine-readable command tree — no guessing flags.',
+    title: 'Sourcing & enrichment',
+    body: 'Kick off candidate sourcing as a background job, poll for results, and enrich profiles with deep research before you ever reach out.',
+  },
+  {
+    title: 'AI interviews & screening',
+    body: 'Design structured interviews, send them to candidates, and read back scored results. No scheduling calls required.',
+  },
+  {
+    title: 'Outreach & scheduling',
+    body: 'Email shortlisted candidates with scheduling links, straight from the command line or from a prompt to your agent.',
+  },
+  {
+    title: 'JSON everywhere',
+    body: 'Every command emits structured JSON when piped, with stable exit codes. Agents and scripts can branch on results without parsing prose.',
   },
 ];
 
@@ -210,23 +222,23 @@ const WHY = [
 const FAQ = [
   {
     q: 'What is the Staplehire CLI?',
-    a: 'A single binary (`staplehire`) that runs your entire hiring pipeline from the terminal — roles, stages, candidates, sourcing, enrichment, AI interviews, and agent email — with JSON output built for scripts and AI agents.',
+    a: 'A single binary (`staplehire`) that runs your entire hiring pipeline from the terminal: open roles, source candidates, screen, run AI interviews, and move people through stages. You and your AI agents can recruit without ever opening a dashboard.',
   },
   {
-    q: 'How do AI agents use it?',
-    a: 'Run `staplehire skills install` to drop a skill into your `.agents`, `.claude`, or `.cursor` folder. The agent then discovers commands with `staplehire commands` and runs the same flows you would, passing JSON between steps.',
+    q: 'How do my AI agents use it?',
+    a: 'Run `staplehire skills install` once and your agent (Cursor, Claude Code, Codex, and friends) learns the whole toolkit. From then on you just ask in plain English: "source ten candidates for this role and shortlist the strongest."',
   },
   {
-    q: 'Do I need a browser to authenticate?',
-    a: 'Locally, `staplehire login` opens a browser for a one-time PKCE flow and writes a key to `.env`. For agents and CI, set `STAPLEHIRE_KEY` directly — no browser required.',
+    q: 'Do I have to learn the commands?',
+    a: "No. Prompt your agent in plain English and it drives the CLI for you. The commands exist so it has something reliable to run. If you'd rather script things yourself, every command works interactively at the shell too.",
   },
   {
-    q: 'Does it work in CI/CD?',
-    a: 'Yes. Set `STAPLEHIRE_KEY` as a secret, install the CLI, and use `-q` for clean JSON output. Stable exit codes let your pipeline assert on success or failure.',
+    q: 'Does it work in CI and automations?',
+    a: 'Yes. Set `STAPLEHIRE_KEY` as a secret and the CLI runs unattended. Sourcing and enrichment run as background jobs you can kick off, poll, and act on from any pipeline.',
   },
   {
-    q: 'Is the output stable enough to script against?',
-    a: 'Every data command writes JSON to stdout; failures write structured JSON to stderr with documented exit codes (2 auth, 3 validation, 4 not found, and so on). Parse `error.code`, never message strings.',
+    q: 'How do I authenticate?',
+    a: '`staplehire login` opens your browser once and you\u2019re done. For agents running unattended or in CI, set a `STAPLEHIRE_KEY` instead. No browser needed.',
   },
 ];
 
@@ -262,7 +274,7 @@ function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: bo
 
 function CliLandingPage() {
   useEffect(() => {
-    document.title = 'Staplehire CLI — a recruiting tool for your AI agents';
+    document.title = 'Staplehire CLI: hire from the terminal';
     trackPageEvent('cli_landing_viewed');
   }, []);
 
@@ -281,7 +293,7 @@ function CliLandingPage() {
               transition={{ duration: 0.5 }}
               className="mb-7 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground"
             >
-              Terminal + AI agents
+              The Staplehire CLI
             </motion.div>
 
             <motion.h1
@@ -299,9 +311,8 @@ function CliLandingPage() {
               transition={{ duration: 0.6, delay: 0.14 }}
               className="mt-6 para-lg max-w-[52ch] text-muted-foreground"
             >
-              The Staplehire CLI runs your whole hiring pipeline from the terminal — create roles,
-              source and enrich candidates, send AI interviews, and move stages. JSON output built
-              for scripts and AI agents; human-readable when you&apos;re at the shell.
+              Your entire hiring pipeline as a command line tool: roles, sourcing, screening, AI
+              interviews. Run it yourself, or hand it to your AI agents and ask them to hire.
             </motion.p>
 
             <motion.div
@@ -346,10 +357,11 @@ function CliLandingPage() {
           <DevGridContainer>
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
               <ScrollReveal>
-                <h2 className="typography-h2 text-balance">Two commands</h2>
+                <h2 className="typography-h2 text-balance">Two commands to set up</h2>
                 <p className="mt-4 para-lg max-w-[44ch] text-muted-foreground">
-                  Install the package globally, then authenticate. For agents and CI, skip the
-                  browser and set an API key instead.
+                  Install globally and log in once. Agents and CI environments skip the browser.
+                  Set <code className="font-mono text-[0.9em]">STAPLEHIRE_KEY</code> and they run
+                  unattended.
                 </p>
                 <div className="mt-7 flex flex-wrap items-center gap-4">
                   <a
@@ -389,9 +401,12 @@ function CliLandingPage() {
         <section className="py-16 md:py-24">
           <DevGridContainer>
             <ScrollReveal>
-              <h2 className="typography-h2 max-w-[18ch] text-balance">
-                Why your agent needs its own recruiter
+              <h2 className="typography-h2 max-w-[20ch] text-balance">
+                Full pipeline coverage, tuned for the terminal
               </h2>
+              <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
+                Anything you can do in the Staplehire app is available in the CLI, too.
+              </p>
             </ScrollReveal>
             <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.06] sm:grid-cols-3">
               {WHY.map((item, i) => (
@@ -415,10 +430,12 @@ function CliLandingPage() {
         <section className="py-16 md:py-24">
           <DevGridContainer>
             <ScrollReveal>
-              <h2 className="typography-h2 text-balance">Working code</h2>
+              <h2 className="typography-h2 text-balance">
+                Built for humans. Built for agents.
+              </h2>
               <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
-                Prompt your agent in plain English with the Staplehire skill, or script the same
-                flow in your shell or CI. Both speak JSON.
+                At the shell you get readable, interactive output. Agents and CI get structured
+                JSON with stable exit codes. Prompt in plain English or script it. Same commands either way.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.06} className="mt-9">
@@ -434,11 +451,11 @@ function CliLandingPage() {
           <DevGridContainer>
             <ScrollReveal>
               <h2 className="typography-h2 max-w-[22ch] text-balance">
-                Wire hiring into your agent of choice
+                Your agents can hire now
               </h2>
               <p className="mt-4 para-lg max-w-[56ch] text-muted-foreground">
-                Install skills, discover commands programmatically, and run the same flows you would
-                in the app — Cursor, Claude Code, Codex, OpenClaw, Hermes, and Pi.
+                One skill install and Cursor, Claude Code, Codex, OpenClaw, Hermes, or Pi can run
+                your hiring end to end. Ask in plain English; the agent drives the CLI.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.06}>
@@ -482,10 +499,9 @@ function CliLandingPage() {
         <section id="get-started" className="py-24 md:py-32">
           <DevGridContainer centered className="max-w-[720px]">
             <ScrollReveal>
-              <h2 className="typography-h1 text-balance">Ship an agent that can actually hire</h2>
+              <h2 className="typography-h1 text-balance">Hire someone this afternoon</h2>
               <p className="mt-5 para-lg mx-auto max-w-[46ch] text-muted-foreground">
-                Self-serve install, browser login, and a machine-readable command tree. Start in
-                minutes from your repo root.
+                Install the CLI, log in, and your terminal (or your agent) is ready to recruit.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.08} className="mt-10">

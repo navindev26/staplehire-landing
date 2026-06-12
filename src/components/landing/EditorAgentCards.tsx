@@ -31,6 +31,7 @@ const EDITORS: EditorCard[] = [
     logo: '/landing/editors/claude-code.ico',
     statA: { label: 'Discovery', value: 'commands' },
     statB: { label: 'Auth', value: 'login' },
+    badge: 'Popular',
   },
   {
     id: 'codex',
@@ -66,7 +67,7 @@ const EDITORS: EditorCard[] = [
     name: 'Pi',
     by: 'Mario Zechner',
     description: 'Minimal terminal coding harness — extend with skills and run Staplehire in the TUI.',
-    logo: '/landing/editors/pi.svg',
+    logo: '/landing/editors/pi.png',
     logoClassName: 'size-8',
     statA: { label: 'Harness', value: 'terminal' },
     statB: { label: 'Packages', value: 'npm' },

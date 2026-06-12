@@ -16,9 +16,9 @@ export function SiteFooter() {
             Sign in
           </a>
           {' · '}
-          Already hiring with Staplehire? Open the{' '}
+          Hire someone now.{' '}
           <a href={appPath('/dashboard')} className="underline-offset-4 hover:underline">
-            app
+            Open the app
           </a>
         </p>
       </div>
