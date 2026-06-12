@@ -1,10 +1,10 @@
 ---
-title: "Source candidates with the Staplehire CLI"
-description: "Start an AI sourcing job from the Staplehire CLI, poll it, and fetch prospects for a role."
+title: "Source candidates"
+description: "Start an AI sourcing job from the Staplehire CLI, poll the async job, and fetch matched prospects for a role as JSON."
 sidebarTitle: "Source candidates"
 ---
 
-Start a sourcing job for a role, poll the async job, then list matched prospects as JSON.
+`sourcing start` enqueues an AI sourcing job that finds prospects for a role. Like enrichment, it's **async**: start the job, [poll it](/poll-agent-jobs), then list prospects with `sourcing prospects`.
 
 ```bash
 JOB_ID=$(staplehire sourcing start <roleId> --prompt "Backend engineers, seed-stage, remote" | jq -r '.job.id')
@@ -12,64 +12,68 @@ staplehire jobs poll "$JOB_ID"
 staplehire sourcing prospects <roleId>
 ```
 
-## Quickstart
+## The start → poll → list pattern
 
-Create a role first if you do not already have a `roleId`.
+<Steps>
+  <Step title="Start sourcing">
+    ```bash
+    ROLE_ID=$(staplehire roles create --jd "Senior backend engineer. TypeScript, remote." | jq -r '.role.id')
+    JOB_ID=$(staplehire sourcing start "$ROLE_ID" \
+      --prompt "Backend engineers, seed-stage, remote" \
+      | jq -r '.job.id')
+    ```
 
-```bash
-ROLE_ID=$(staplehire roles create --jd "Senior backend engineer. TypeScript, remote." | jq -r '.role.id')
-JOB_ID=$(staplehire sourcing start "$ROLE_ID" --prompt "Backend engineers, seed-stage, remote" | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID"
-staplehire sourcing prospects "$ROLE_ID" | jq '.prospects[]'
-```
-
-Example `sourcing start` output:
-
-```json
-{
-  "job": {
-    "id": "job_...",
-    "type": "source_role_prospects",
-    "status": "pending",
-    "role_id": "550e8400-e29b-41d4-a716-446655440000"
-  },
-  "created": true
-}
-```
-
-Example prospects output:
-
-```json
-{
-  "prospects": [
+    ```json
     {
-      "name": "Jordan Lee",
-      "email": "jordan@example.com",
-      "linkedin_url": "https://linkedin.com/in/...",
-      "fit_score": 0.82
+      "job": {
+        "id": "job_…",
+        "type": "source_role_prospects",
+        "status": "pending",
+        "role_id": "550e8400-e29b-41d4-a716-446655440000"
+      },
+      "created": true
     }
-  ]
-}
-```
+    ```
+  </Step>
+  <Step title="Poll until done">
+    ```bash
+    staplehire jobs poll "$JOB_ID"
+    ```
+  </Step>
+  <Step title="List the prospects">
+    Always read prospects with `sourcing prospects` — not from the `jobs poll` output.
 
-## Parameters
+    ```bash
+    staplehire sourcing prospects "$ROLE_ID" | jq '.prospects[]'
+    ```
+
+    ```json
+    {
+      "prospects": [
+        {
+          "name": "Jordan Lee",
+          "email": "jordan@example.com",
+          "linkedin_url": "https://linkedin.com/in/…",
+          "fit_score": 0.82
+        }
+      ]
+    }
+    ```
+  </Step>
+</Steps>
+
+### Parameters
 
 | Command | Parameter | Required | Description |
 | --- | --- | --- | --- |
 | `sourcing start` | `<roleId>` | Yes | Role to source against |
 | `sourcing start` | `--prompt <text>` | No | Extra sourcing instructions |
-| `sourcing start` | `--force` | No | Start a fresh job when allowed |
-| `sourcing prospects` | `<roleId>` | Yes | Role whose prospects should be listed |
+| `sourcing start` | `--force` | No | Start a fresh job even if one is in flight |
+| `sourcing prospects` | `<roleId>` | Yes | Role whose prospects to list (alias: `sourcing list`) |
 
 ## Examples
 
-### Source remote backend engineers
-
-```bash
-staplehire sourcing start <roleId> --prompt "Backend engineers, seed-stage, remote"
-```
-
-### Source candidates and keep only strong fits
+### Keep only strong fits
 
 ```bash
 staplehire sourcing prospects <roleId> | jq '.prospects[] | select(.fit_score >= 0.8)'
@@ -77,33 +81,35 @@ staplehire sourcing prospects <roleId> | jq '.prospects[] | select(.fit_score >=
 
 ### Avoid duplicate sourcing jobs
 
-If `created` is `false`, a job is already in flight. Poll the returned `job.id` instead of starting another job.
+If `created` is `false`, a sourcing job is already running for the role. Poll the returned `job.id` instead of starting another.
 
 ```bash
-JOB_ID=$(staplehire sourcing start <roleId> | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID"
+RESP=$(staplehire sourcing start <roleId>)
+[ "$(echo "$RESP" | jq -r '.created')" = "false" ] && echo "Reusing in-flight job"
+staplehire jobs poll "$(echo "$RESP" | jq -r '.job.id')"
 ```
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `NotFoundError` | The role ID does not exist | Run `staplehire roles list` and use a real role ID |
-| `AuthenticationError` | No API key is configured | Run `staplehire login` or set `STAPLEHIRE_KEY` |
-| Exit code `9` | Poll timed out | Increase `--timeout` or check the job later |
+| `NotFoundError` | `4` | The role ID does not exist — run `staplehire roles list` |
+| Poll timeout | `9` | Increase `--timeout` or check the job later with `jobs get` |
+| `job_failed` | `1` | Read `error.message`; adjust the prompt and retry with `--force` |
+| `AuthenticationError` | `2` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
 
 ## FAQ
 
-### Does sourcing return results immediately?
+<AccordionGroup>
+  <Accordion title="Does sourcing return results immediately?">
+    No. Sourcing is asynchronous — poll the job, then call `sourcing prospects`.
+  </Accordion>
+  <Accordion title="Can I steer the search?">
+    Yes. Pass `--prompt` to `sourcing start` to focus the sourcing job.
+  </Accordion>
+  <Accordion title="What is `sourcing list`?">
+    A deprecated alias for `sourcing prospects`.
+  </Accordion>
+</AccordionGroup>
 
-No. Sourcing is async. Call `jobs poll` before reading prospects.
-
-### Can I source with a custom prompt?
-
-Yes. Pass `--prompt` to `sourcing start`.
-
-### What is `sourcing list`?
-
-It is an alias for `sourcing prospects`.
-
-Related: [Create a role with the Staplehire CLI](/create-role-cli) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Create a role](/create-role-cli) · [Poll jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)

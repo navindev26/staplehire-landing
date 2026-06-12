@@ -1,0 +1,120 @@
+---
+title: "Manage stages"
+description: "Create and list pipeline stages on a Staplehire role from the CLI, list candidates per stage, and recover from duplicate-candidate conflicts."
+sidebarTitle: "Manage stages"
+---
+
+Every candidate lives in a **stage** on a role's pipeline. Create your stages first, then add candidates into them. Stage names are unique per role.
+
+```bash
+staplehire stages create <roleId> --name "Sourced" --position 0
+staplehire stages list <roleId>
+```
+
+## Create a stage
+
+```bash
+staplehire stages create <roleId> --name "Phone Screen" --position 1
+```
+
+Example output:
+
+```json
+{
+  "stage": {
+    "id": "stage_…",
+    "role_id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Phone Screen",
+    "position": 1
+  }
+}
+```
+
+### Parameters
+
+| Argument / flag | Required | Description |
+| --- | --- | --- |
+| `<roleId>` | Yes | Role the stage belongs to |
+| `--name <name>` | Yes | Stage name, unique per role (for example `Sourced`) |
+| `--position <n>` | Yes | Sort order; `0` is the leftmost stage |
+
+### Build a canonical pipeline
+
+```bash
+ROLE_ID=$(staplehire roles create --jd "Backend engineer…" | jq -r '.role.id')
+staplehire stages create "$ROLE_ID" --name "Sourced"      --position 0
+staplehire stages create "$ROLE_ID" --name "Phone Screen" --position 1
+staplehire stages create "$ROLE_ID" --name "Shortlist"    --position 2
+```
+
+## List stages
+
+```bash
+staplehire stages list <roleId>
+```
+
+```json
+{
+  "stages": [
+    { "id": "stage_…", "name": "Sourced", "position": 0 },
+    { "id": "stage_…", "name": "Phone Screen", "position": 1 }
+  ]
+}
+```
+
+Resolve a stage ID by name:
+
+```bash
+staplehire stages list "$ROLE_ID" | jq -r '.stages[] | select(.name == "Sourced") | .id'
+```
+
+## List candidates in a stage
+
+```bash
+staplehire stages candidates <roleId> <stageId>
+```
+
+```json
+{ "candidates": [ { "id": "cand_…", "email": "alex@example.com", "name": "Alex Chen" } ] }
+```
+
+## Recover from a duplicate candidate (409)
+
+A second `candidates create` with the same email on the **same role** fails with exit code `5` and `error.code` `candidate_already_exists`. Don't re-add — find the existing candidate and move them instead.
+
+```bash
+EMAIL="alex@example.com"
+
+# Walk every stage to find the existing candidate by email
+CANDIDATE_ID=$(staplehire stages list "$ROLE_ID" | jq -r '.stages[].id' | while read -r SID; do
+  staplehire stages candidates "$ROLE_ID" "$SID" \
+    | jq -r --arg e "$EMAIL" '.candidates[]? | select(.email == $e) | .id'
+done | head -1)
+
+staplehire candidates move "$CANDIDATE_ID" --stage-id "$SHORTLIST_STAGE_ID"
+```
+
+<Note>
+  Candidates are scoped **per role**. The same email on a different role creates a separate candidate — there is no org-wide dedup.
+</Note>
+
+## Common errors
+
+| Error | Exit code | Fix |
+| --- | --- | --- |
+| `stage_name_already_exists` | `5` | Reuse the existing stage or pick a different name |
+| `role_not_found` | `4` | Confirm the role ID with `staplehire roles list` |
+| `ValidationError` | `3` | Provide both `--name` and `--position` |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do I need a stage before adding candidates?">
+    Yes. `candidates create` requires either `--stage <name>` or `--stage-id <id>`. Create stages first.
+  </Accordion>
+  <Accordion title="Can two stages share a name on one role?">
+    No. Stage names are unique per role. Reuse the existing stage or choose a new name.
+  </Accordion>
+</AccordionGroup>
+
+Related: [Create a role](/create-role-cli) · [Add a candidate](/add-candidate-cli) · [Command reference](/commands)

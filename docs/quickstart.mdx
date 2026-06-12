@@ -1,0 +1,149 @@
+---
+title: "Quickstart"
+description: "Go from a fresh install to a sent AI interview in a few minutes — create a role, build a stage, add a candidate, and invite them, all from the terminal."
+sidebarTitle: "Quickstart"
+---
+
+This walkthrough takes you through a complete hiring loop with the Staplehire CLI: **install → authenticate → create a role → add a stage → add a candidate → send an AI interview.** Every step returns JSON, so you can chain commands with [`jq`](https://jqlang.github.io/jq/).
+
+<Steps>
+  <Step title="Install the CLI">
+    Install globally with npm and confirm the `staplehire` binary is on your `PATH`.
+
+    ```bash
+    npm install -g @staplehire/staplehire-cli
+    staplehire --version
+    ```
+
+    Need details or alternatives? See [Installation](/installation).
+  </Step>
+
+  <Step title="Authenticate">
+    Log in with browser OAuth. This opens [app.staplehire.com](https://app.staplehire.com), completes a PKCE exchange, and writes `STAPLEHIRE_KEY` to a `.env` file in your current directory.
+
+    ```bash
+    staplehire login
+    staplehire whoami
+    ```
+
+    For agents and CI, set `STAPLEHIRE_KEY` instead of logging in. See [Authentication](/authentication).
+  </Step>
+
+  <Step title="Verify your environment">
+    `doctor` checks your CLI version, API key, gateway URL, and that `GET /v1/me` succeeds.
+
+    ```bash
+    staplehire doctor
+    ```
+
+    All checks should report `pass`. If not, follow the hint in each check's message.
+  </Step>
+
+  <Step title="Create a role">
+    Pass a job description inline, from a file (`@path`), or from stdin (`-`). Capture the role ID for later steps.
+
+    ```bash
+    ROLE_ID=$(staplehire roles create \
+      --jd "Senior backend engineer. TypeScript, Postgres, remote." \
+      | jq -r '.role.id')
+
+    echo "Role: $ROLE_ID"
+    ```
+
+    See [Create a role](/create-role-cli).
+  </Step>
+
+  <Step title="Add a pipeline stage">
+    Candidates live in stages. Create one before adding candidates.
+
+    ```bash
+    STAGE_ID=$(staplehire stages create "$ROLE_ID" \
+      --name "Sourced" --position 0 \
+      | jq -r '.stage.id')
+    ```
+
+    See [Manage stages](/stages-cli).
+  </Step>
+
+  <Step title="Add a candidate">
+    Add a candidate by email into the stage you just created. The command is idempotent per role and email.
+
+    ```bash
+    CANDIDATE_ID=$(staplehire candidates create "$ROLE_ID" \
+      --email alex@example.com \
+      --name "Alex Chen" \
+      --stage "Sourced" \
+      | jq -r '.candidate.id')
+    ```
+
+    See [Add a candidate](/add-candidate-cli).
+  </Step>
+
+  <Step title="Generate an interview design">
+    An interview design defines the AI screening round. Generate one for the role.
+
+    ```bash
+    DESIGN_ID=$(staplehire designs create "$ROLE_ID" \
+      --type structured \
+      --brief "Async screen for backend fundamentals and system design." \
+      --round-title "Backend screen" \
+      | jq -r '.interview_design.id')
+    ```
+
+    See [Send an interview](/send-interview-cli).
+  </Step>
+
+  <Step title="Send the interview">
+    Invite the candidate to the AI interview. This emails them an apply link.
+
+    ```bash
+    staplehire candidates send-interview "$CANDIDATE_ID" --design "$DESIGN_ID"
+    ```
+
+    Track responses later with `staplehire sessions list "$ROLE_ID"`.
+  </Step>
+</Steps>
+
+## The whole thing in one script
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROLE_ID=$(staplehire roles create \
+  --jd "Senior backend engineer. TypeScript, Postgres, remote." \
+  | jq -er '.role.id')
+
+staplehire stages create "$ROLE_ID" --name "Sourced" --position 0 >/dev/null
+
+CANDIDATE_ID=$(staplehire candidates create "$ROLE_ID" \
+  --email alex@example.com --name "Alex Chen" --stage "Sourced" \
+  | jq -er '.candidate.id')
+
+DESIGN_ID=$(staplehire designs create "$ROLE_ID" \
+  --type structured --round-title "Backend screen" \
+  | jq -er '.interview_design.id')
+
+staplehire candidates send-interview "$CANDIDATE_ID" --design "$DESIGN_ID"
+```
+
+<Note>
+  `jq -e` exits non-zero if a field is missing, so the script fails fast instead of passing an empty ID into the next command.
+</Note>
+
+## Where to next
+
+<CardGroup cols={2}>
+  <Card title="Source candidates" icon="search" href="/source-candidates-cli">
+    Let the agent find prospects for a role instead of adding them by hand.
+  </Card>
+  <Card title="Enrich a candidate" icon="sparkles" href="/enrich-candidate-cli">
+    Run deep research on a candidate and read the summary.
+  </Card>
+  <Card title="Automate with agents" icon="bot" href="/ai-agents">
+    Install the skill so Cursor, Claude Code, and Codex run these flows for you.
+  </Card>
+  <Card title="Command reference" icon="terminal" href="/commands">
+    Every command, flag, and exit code in one place.
+  </Card>
+</CardGroup>

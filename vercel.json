@@ -45,7 +45,15 @@
       "destination": "https://staplehire.mintlify.dev/docs/:match*"
     },
     {
-      "source": "/(.*)",
+      "source": "/blog",
+      "destination": "/blog.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/blog/:slug.html"
+    },
+    {
+      "source": "/((?!blog|docs|assets|landing|favicon|robots|sitemap|static-loader).*)",
       "destination": "/index.html"
     }
   ],

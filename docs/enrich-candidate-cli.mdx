@@ -1,10 +1,10 @@
 ---
-title: "Enrich a candidate with the Staplehire CLI"
-description: "Start a Staplehire candidate research job, poll it, and read candidate research from the CLI."
+title: "Enrich a candidate"
+description: "Start a Staplehire candidate deep-research job, poll it, and read the research summary from the CLI. Enrichment is async — always poll before reading."
 sidebarTitle: "Enrich a candidate"
 ---
 
-Use `candidates enrich` to start async candidate research, then poll the job and read results with `candidates research`.
+`candidates enrich` starts an async **deep research** job on a candidate. The command returns immediately with a job ID — you must [poll the job](/poll-agent-jobs) until it's `done`, then read the result with `candidates research`.
 
 ```bash
 JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
@@ -12,71 +12,84 @@ staplehire jobs poll "$JOB_ID"
 staplehire candidates research <candidateId>
 ```
 
-## Quickstart
+## The enrich → poll → read pattern
 
-```bash
-JOB_ID=$(staplehire candidates enrich <candidateId> \
-  --prompt "Focus on backend systems, TypeScript, and startup experience." \
-  | jq -r '.job.id')
+<Steps>
+  <Step title="Start the job">
+    ```bash
+    JOB_ID=$(staplehire candidates enrich <candidateId> \
+      --prompt "Focus on backend systems, TypeScript, and startup experience." \
+      | jq -r '.job.id')
+    ```
 
-staplehire jobs poll "$JOB_ID"
-staplehire candidates research <candidateId>
-```
+    ```json
+    {
+      "job": { "id": "job_…", "type": "enrich", "status": "pending", "candidate_id": "cand_…" },
+      "created": true
+    }
+    ```
+  </Step>
+  <Step title="Poll until done">
+    ```bash
+    staplehire jobs poll "$JOB_ID"
+    ```
 
-Example enrich output:
+    `jobs poll` blocks until the job reaches `done` or `failed`. Exit `0` means done; exit `9` means the poll timed out (the job may still be running).
+  </Step>
+  <Step title="Read the research">
+    ```bash
+    staplehire candidates research <candidateId>
+    ```
 
-```json
-{
-  "job": {
-    "id": "job_...",
-    "type": "enrich",
-    "status": "pending",
-    "candidate_id": "cand_..."
-  },
-  "created": true
-}
-```
+    ```json
+    {
+      "research": {
+        "summary": "Candidate has recent backend platform experience.",
+        "highlights": ["Built TypeScript services", "Worked in early-stage startups"],
+        "sources": ["https://linkedin.com/in/…"]
+      }
+    }
+    ```
+  </Step>
+</Steps>
 
-Example research output:
-
-```json
-{
-  "research": {
-    "summary": "Candidate has recent backend platform experience.",
-    "highlights": ["Built TypeScript services", "Worked in early-stage startups"],
-    "sources": ["https://linkedin.com/in/..."]
-  }
-}
-```
-
-## Parameters
+### Parameters
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `<candidateId>` | Yes | Candidate to enrich |
-| `--prompt <text>` | No | Extra research instructions |
-| `--force` | No | Start a fresh job when allowed |
+| `<candidateId>` | Yes | Candidate to research |
+| `--prompt <text>` | No | Extra research instructions to focus the job |
+| `--force` | No | Start a fresh job even if one is already in flight |
 
-## Examples
+## Handle in-flight jobs
 
-### Enrich and extract the summary
-
-```bash
-JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
-staplehire jobs poll "$JOB_ID" -q
-staplehire candidates research <candidateId> | jq -r '.research.summary'
-```
-
-### Reuse an existing in-flight job
-
-If the response has `"created": false`, a job is already running. Poll the returned `job.id`.
+If the response has `"created": false`, an enrich job is **already running** for this candidate. Don't start another — poll the returned `job.id`.
 
 ```bash
-JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id')
+RESP=$(staplehire candidates enrich <candidateId>)
+JOB_ID=$(echo "$RESP" | jq -r '.job.id')
+CREATED=$(echo "$RESP" | jq -r '.created')
+echo "created=$CREATED — polling $JOB_ID"
 staplehire jobs poll "$JOB_ID"
 ```
 
-### Read screening results
+Pass `--force` only when you intentionally want to re-run research:
+
+```bash
+staplehire candidates enrich <candidateId> --force
+```
+
+## One-liner
+
+```bash
+JOB_ID=$(staplehire candidates enrich <candidateId> | jq -r '.job.id') \
+  && staplehire jobs poll "$JOB_ID" -q \
+  && staplehire candidates research <candidateId> | jq -r '.research.summary'
+```
+
+## Read screening results
+
+Separate from research, fit/screening results (available after an interview) are read with:
 
 ```bash
 staplehire candidates screening-result <candidateId>
@@ -84,24 +97,25 @@ staplehire candidates screening-result <candidateId>
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `NotFoundError` | Candidate does not exist | Run `candidates list` or `candidates get` |
-| Exit code `9` | Poll timed out | Increase `--timeout` or check `jobs get` later |
-| `AuthenticationError` | Missing API key | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+| `NotFoundError` | `4` | Candidate does not exist — run `candidates list` or `candidates get` |
+| Poll timeout | `9` | Increase `--timeout`, or inspect later with `jobs get <jobId>` |
+| `job_failed` | `1` | Read `error.message`; fix inputs or retry with `--force` |
+| `AuthenticationError` | `2` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
 
 ## FAQ
 
-### Is candidate enrichment synchronous?
+<AccordionGroup>
+  <Accordion title="Is enrichment synchronous?">
+    No. It creates a job and returns immediately. Poll the job before calling `candidates research`.
+  </Accordion>
+  <Accordion title="Can I customize the research focus?">
+    Yes. Pass `--prompt` to steer what the deep-research job investigates.
+  </Accordion>
+  <Accordion title="What does `\"created\": false` mean?">
+    A research job for this candidate is already in flight. Poll the returned `job.id` instead of starting a duplicate. Use `--force` to deliberately re-run.
+  </Accordion>
+</AccordionGroup>
 
-No. It creates a job. Poll it before calling `candidates research`.
-
-### Can I customize the research focus?
-
-Yes. Pass `--prompt` to `candidates enrich`.
-
-### Where do I read the final research?
-
-Call `staplehire candidates research <candidateId>` after the job reaches `done`.
-
-Related: [Add a candidate with the Staplehire CLI](/add-candidate-cli) · [Poll Staplehire CLI jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)
+Related: [Add a candidate](/add-candidate-cli) · [Poll jobs](/poll-agent-jobs) · [CLI errors](/cli-errors)

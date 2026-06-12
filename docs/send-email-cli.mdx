@@ -1,0 +1,105 @@
+---
+title: "Send an email"
+description: "Send a branded email to a candidate from the Staplehire CLI with a subject, title, body, optional call-to-action button, and a dry-run mode."
+sidebarTitle: "Send an email"
+---
+
+`candidates send-email` sends a branded, templated email to a candidate — the same composer the dashboard uses. Set a subject, a hero title, a body, and an optional call-to-action button.
+
+```bash
+staplehire candidates send-email <candidateId> \
+  --subject "Quick follow-up" \
+  --title "Sorry we missed you" \
+  --body "Hi — here's a Calendly link when you're free."
+```
+
+## Send an email
+
+```bash
+staplehire candidates send-email <candidateId> \
+  --subject "Quick follow-up" \
+  --title "Sorry we missed you" \
+  --description "We'd love to reconnect" \
+  --body "Hi Alex, here's a link to book time with us." \
+  --cta "Book 15 minutes" \
+  --url "https://calendly.com/you/15min"
+```
+
+### Parameters
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `<candidateId>` | Yes | Candidate to email |
+| `--subject <text>` | Yes | Email subject line |
+| `--title <text>` | Yes | Hero title rendered in the email body |
+| `--body <value>` | Yes | Body content: inline text, a file path, `@path`, or `-` for stdin |
+| `--description <text>` | No | Subheading shown under the title |
+| `--cta <label>` | No | Button label (pair with `--url`) |
+| `--url <url>` | No | Button link (pair with `--cta`) |
+| `--brand-name <name>` | No | Override the brand name in the template |
+| `--dry-run` | No | Validate the payload without sending |
+
+<Note>
+  `--cta` and `--url` work together — set both to render a button, or neither.
+</Note>
+
+## Body from a file or stdin
+
+The `--body` flag accepts the same input forms as `--jd`:
+
+<CodeGroup>
+
+```bash Inline
+staplehire candidates send-email <candidateId> \
+  --subject "Update" --title "Next steps" \
+  --body "Thanks for your time today."
+```
+
+```bash From @file
+staplehire candidates send-email <candidateId> \
+  --subject "Update" --title "Next steps" \
+  --body @./email-body.md
+```
+
+```bash From stdin
+cat email-body.md | staplehire candidates send-email <candidateId> \
+  --subject "Update" --title "Next steps" --body -
+```
+
+</CodeGroup>
+
+## Preview without sending
+
+Use `--dry-run` to validate the payload (and catch missing fields) without actually delivering the email.
+
+```bash
+staplehire candidates send-email <candidateId> \
+  --subject "Test" --title "Hello" --body "Preview only" --dry-run
+```
+
+## Common errors
+
+| Error | Exit code | Fix |
+| --- | --- | --- |
+| `ValidationError` | `3` | Missing `--subject`, `--title`, or `--body` — provide all three |
+| `NotFoundError` | `4` | Candidate does not exist — run `candidates list` |
+| `AuthenticationError` | `2` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What's the minimum to send an email?">
+    `--subject`, `--title`, and `--body`. Everything else is optional.
+  </Accordion>
+  <Accordion title="Can I add a button?">
+    Yes. Set `--cta "Label"` together with `--url "https://…"`.
+  </Accordion>
+  <Accordion title="Is there a deprecated alias?">
+    Yes — `candidates send-message` is a deprecated alias for `send-email`.
+  </Accordion>
+  <Accordion title="How do I test a template before sending?">
+    Add `--dry-run`. The CLI validates the payload and reports what would be sent, without delivering it.
+  </Accordion>
+</AccordionGroup>
+
+Related: [Send an interview](/send-interview-cli) · [Add a candidate](/add-candidate-cli) · [Command reference](/commands)

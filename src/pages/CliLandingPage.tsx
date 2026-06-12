@@ -1,18 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Sun,
-  Moon,
-  Copy,
-  Check,
-  Terminal,
-} from 'lucide-react';
+import { Copy, Check, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Logo } from '@/components/ui/logo';
-import { useTheme } from '@/hooks/use-theme';
+import { SiteLayout } from '@/components/layout/SiteLayout';
+import { DOCS_URL } from '@/lib/docs-url';
 import { trackPageEvent } from '@/services/analyticsService';
 import ScrollReveal from '@/components/landing/ScrollReveal';
-import AgentPipelineShowcase from '@/components/landing/AgentPipelineShowcase';
 import EditorAgentCards from '@/components/landing/EditorAgentCards';
 import {
   DevGridContainer,
@@ -21,304 +14,522 @@ import {
 } from '@/components/landing/DevGridFrame';
 
 const INSTALL_CMD = 'npm install -g @staplehire/staplehire-cli';
+const SKILL_CMD = 'staplehire skills install';
+const KEY_CMD = 'export STAPLEHIRE_KEY="sh_live_your_key_here"';
+const NPM_URL = 'https://www.npmjs.com/package/@staplehire/staplehire-cli';
 
-function CodePanel({ code, className = '' }: { code: string; className?: string }) {
-  return (
-    <pre
-      className={`overflow-x-auto rounded-xl border border-foreground/10 bg-[#0d0d0d] p-4 font-mono text-[13px] leading-relaxed text-[#e8e6e3] dark:border-white/10 ${className}`}
-    >
-      <code>{code}</code>
-    </pre>
-  );
-}
+/* ------------------------------------------------------------------ */
+/* Primitives                                                          */
+/* ------------------------------------------------------------------ */
 
-function CopyInstallButton() {
+function useCopy(text: string, event?: string) {
   const [copied, setCopied] = useState(false);
-
   const copy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(INSTALL_CMD);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
-      trackPageEvent('cli_install_copy');
-      window.setTimeout(() => setCopied(false), 2000);
+      if (event) trackPageEvent(event);
+      window.setTimeout(() => setCopied(false), 1800);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [text, event]);
+  return { copied, copy };
+}
 
+function CopyButton({ text, event, label }: { text: string; event?: string; label?: string }) {
+  const { copied, copy } = useCopy(text, event);
   return (
     <button
       type="button"
       onClick={copy}
-      className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-[#e8e6e3] transition-colors hover:bg-white/10"
-      aria-label="Copy install command"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-[11px] text-white/55 transition-colors hover:border-white/25 hover:text-white"
+      aria-label={label ?? 'Copy to clipboard'}
     >
-      {copied ? <Check className="size-4 text-[#2BA316]" /> : <Copy className="size-4 opacity-70" />}
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? <Check className="size-3 text-[#7DD97D]" /> : <Copy className="size-3 opacity-70" />}
+      {label ?? (copied ? 'Copied' : 'Copy')}
     </button>
   );
 }
 
-export default function CliLandingPage() {
-  const { isDark, toggleDarkMode } = useTheme();
-  const [navScrolled, setNavScrolled] = useState(false);
+const secondaryLinkClass =
+  'inline-flex h-[46px] items-center font-mono text-[13px] uppercase tracking-[0.12em] text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline';
 
+/* ------------------------------------------------------------------ */
+/* Syntax-highlighted code rendering (lightweight, token-based)        */
+/* ------------------------------------------------------------------ */
+
+type Tok = { t: string; c?: string };
+
+const C = {
+  dim: 'text-white/30',
+  cmd: 'text-white/85',
+  flag: 'text-[#7AC2F5]',
+  str: 'text-[#7DD97D]',
+  kw: 'text-[#C4A8ED]',
+  num: 'text-[#7AC2F5]',
+  comment: 'text-white/30 italic',
+  key: 'text-[#FF7A1A]',
+};
+
+function Line({ tokens }: { tokens: Tok[] }) {
+  return (
+    <span className="block whitespace-pre">
+      {tokens.map((tok, i) => (
+        <span key={i} className={tok.c}>
+          {tok.t}
+        </span>
+      ))}
+      {'\n'}
+    </span>
+  );
+}
+
+/** Card chrome with a faux window/tab header + copy button. */
+function CodeCard({
+  title,
+  copyText,
+  copyEvent,
+  children,
+  className = '',
+}: {
+  title: string;
+  copyText?: string;
+  copyEvent?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`overflow-hidden rounded-xl border border-white/10 bg-[#0B0C0D] ${className}`}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-2.5">
+        <span className="font-mono text-[12px] text-white/50">{title}</span>
+        {copyText ? <CopyButton text={copyText} event={copyEvent} /> : null}
+      </div>
+      <pre className="overflow-x-auto px-4 py-3.5 font-mono text-[12.5px] leading-[1.65] text-[#E8E6E3]">
+        <code>{children}</code>
+      </pre>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabbed "Working code" panel                                          */
+/* ------------------------------------------------------------------ */
+
+const PROMPT_LINES: Tok[][] = [
+  [{ t: '# Prompt your agent in plain English after installing the skill:', c: C.comment }],
+  [{ t: '', c: C.dim }],
+  [{ t: '"Create a Senior SDR role from this JD, source 10 prospects,', c: C.str }],
+  [{ t: ' rank them by fit, and add the strong ones to the pipeline"', c: C.str }],
+  [{ t: '', c: C.dim }],
+  [{ t: '"Enrich candidate cand_mc, then send the structured interview', c: C.str }],
+  [{ t: ' design once research comes back"', c: C.str }],
+  [{ t: '', c: C.dim }],
+  [{ t: '"Move everyone who scored above 8.5 to Shortlist and email', c: C.str }],
+  [{ t: ' them a scheduling link"', c: C.str }],
+];
+
+const SCRIPT_LINES: Tok[][] = [
+  [{ t: '# Source, poll the async job, then read prospects as JSON', c: C.comment }],
+  [{ t: 'ROLE_ID', c: C.cmd }, { t: '=$(', c: C.dim }, { t: 'staplehire', c: C.key }, { t: ' roles create ', c: C.cmd }, { t: '--jd', c: C.flag }, { t: ' @jd.md', c: C.cmd }, { t: ' | jq -r ', c: C.dim }, { t: "'.role.id'", c: C.str }, { t: ')', c: C.dim }],
+  [{ t: 'JOB_ID', c: C.cmd }, { t: '=$(', c: C.dim }, { t: 'staplehire', c: C.key }, { t: ' sourcing start ', c: C.cmd }, { t: '"$ROLE_ID"', c: C.str }, { t: ' | jq -r ', c: C.dim }, { t: "'.job.id'", c: C.str }, { t: ')', c: C.dim }],
+  [{ t: 'staplehire', c: C.key }, { t: ' jobs poll ', c: C.cmd }, { t: '"$JOB_ID"', c: C.str }],
+  [{ t: 'staplehire', c: C.key }, { t: ' sourcing prospects ', c: C.cmd }, { t: '"$ROLE_ID"', c: C.str }, { t: ' | jq ', c: C.dim }, { t: "'.prospects[]'", c: C.str }],
+  [{ t: '', c: C.dim }],
+  [{ t: '# Every command emits JSON on stdout when piped', c: C.comment }],
+];
+
+const TABS = [
+  { id: 'prompt', label: 'Agent mode', lines: PROMPT_LINES, copy: PROMPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
+  { id: 'script', label: 'Script mode', lines: SCRIPT_LINES, copy: SCRIPT_LINES.map((l) => l.map((t) => t.t).join('')).join('\n') },
+];
+
+function WorkingCode() {
+  const [active, setActive] = useState(TABS[0].id);
+  const tab = TABS.find((t) => t.id === active) ?? TABS[0];
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0B0C0D]">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-white/10 px-2">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setActive(t.id)}
+            className={`relative whitespace-nowrap px-3 py-3 font-mono text-[12px] transition-colors ${
+              active === t.id
+                ? 'text-white'
+                : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            {t.label}
+            {active === t.id && (
+              <span className="absolute inset-x-2 bottom-0 h-px bg-primary" />
+            )}
+          </button>
+        ))}
+        <div className="ml-auto pr-2">
+          <CopyButton text={tab.copy} event="cli_code_copy" />
+        </div>
+      </div>
+      <pre className="overflow-x-auto px-4 py-4 font-mono text-[12.5px] leading-[1.7] text-[#E8E6E3]">
+        <code>
+          {tab.lines.map((line, i) => (
+            <Line key={i} tokens={line} />
+          ))}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Why cards                                                           */
+/* ------------------------------------------------------------------ */
+
+const WHY = [
+  {
+    title: 'Agent skill included',
+    body: 'Ships with a skill for Cursor, Claude Code, Codex, and friends that documents best practices. Your agent learns the whole toolkit in one install.',
+  },
+  {
+    title: 'Roles & pipelines',
+    body: 'Create roles from a JD, define stages, and move candidates through your pipeline. Everything the dashboard does, from the shell.',
+  },
+  {
+    title: 'Sourcing & enrichment',
+    body: 'Kick off candidate sourcing as a background job, poll for results, and enrich profiles with deep research before you ever reach out.',
+  },
+  {
+    title: 'AI interviews & screening',
+    body: 'Design structured interviews, send them to candidates, and read back scored results. No scheduling calls required.',
+  },
+  {
+    title: 'Outreach & scheduling',
+    body: 'Email shortlisted candidates with scheduling links, straight from the command line or from a prompt to your agent.',
+  },
+  {
+    title: 'JSON everywhere',
+    body: 'Every command emits structured JSON when piped, with stable exit codes. Agents and scripts can branch on results without parsing prose.',
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* FAQ                                                                 */
+/* ------------------------------------------------------------------ */
+
+const FAQ = [
+  {
+    q: 'What is the Staplehire CLI?',
+    a: 'A single binary (`staplehire`) that runs your entire hiring pipeline from the terminal: open roles, source candidates, screen, run AI interviews, and move people through stages. You and your AI agents can recruit without ever opening a dashboard.',
+  },
+  {
+    q: 'How do my AI agents use it?',
+    a: 'Run `staplehire skills install` once and your agent (Cursor, Claude Code, Codex, and friends) learns the whole toolkit. From then on you just ask in plain English: "source ten candidates for this role and shortlist the strongest."',
+  },
+  {
+    q: 'Do I have to learn the commands?',
+    a: "No. Prompt your agent in plain English and it drives the CLI for you. The commands exist so it has something reliable to run. If you'd rather script things yourself, every command works interactively at the shell too.",
+  },
+  {
+    q: 'Does it work in CI and automations?',
+    a: 'Yes. Set `STAPLEHIRE_KEY` as a secret and the CLI runs unattended. Sourcing and enrichment run as background jobs you can kick off, poll, and act on from any pipeline.',
+  },
+  {
+    q: 'How do I authenticate?',
+    a: '`staplehire login` opens your browser once and you\u2019re done. For agents running unattended or in CI, set a `STAPLEHIRE_KEY` instead. No browser needed.',
+  },
+];
+
+function FaqItem({ q, a, defaultOpen }: { q: string; a: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(Boolean(defaultOpen));
+  return (
+    <div className="border-b border-foreground/10">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 py-5 text-left"
+      >
+        <span className="typography-h3 text-[18px] font-medium text-foreground sm:text-[19px]">{q}</span>
+        <Plus
+          className={`size-4 shrink-0 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-45' : ''}`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-200 ease-out ${open ? 'grid-rows-[1fr] pb-5' : 'grid-rows-[0fr]'}`}
+      >
+        <div className="overflow-hidden">
+          <p className="para text-muted-foreground max-w-[60ch]">{a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                */
+/* ------------------------------------------------------------------ */
+
+function CliLandingPage() {
   useEffect(() => {
-    document.title = 'Staplehire CLI — recruiting for AI agents';
+    document.title = 'Staplehire CLI: hire from the terminal';
     trackPageEvent('cli_landing_viewed');
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setNavScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <DevGridShell className="text-foreground overflow-x-clip">
-      <header>
-        <nav
-          className={`sticky top-0 z-50 transition-all duration-300 ${
-            navScrolled
-              ? 'bg-background/80 backdrop-blur-xl'
-              : 'bg-background/60 backdrop-blur-sm'
-          }`}
-        >
-          <DevGridContainer>
-            <div className="flex justify-between items-center h-[72px]">
-              <a href="/" className="cursor-pointer" aria-label="Staplehire home">
-                <Logo size="md" />
-              </a>
-              <div className="flex items-center gap-4 sm:gap-6">
-                <a
-                  href="/"
-                  className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Product
-                </a>
-                <button
-                  type="button"
-                  onClick={toggleDarkMode}
-                  className="size-9 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Toggle theme"
-                >
-                  {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-                </button>
-                <a
-                  href="#get-started"
-                  onClick={() => trackPageEvent('cli_cta_click', { location: 'nav' })}
-                >
-                  <Button className="rounded-full px-5 h-[46px] font-bold text-base shadow-lg shadow-primary/20">
-                    Get started
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </DevGridContainer>
-        </nav>
-      </header>
+    <SiteLayout activePage="cli">
+      <DevGridShell className="text-foreground overflow-x-clip">
+        <DevGridRule />
 
-      <DevGridRule />
-
-      <main>
-        {/* 1. Hero — context.dev pattern */}
-        <section className="relative isolate pt-14 pb-16 md:pt-24 md:pb-24">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[700px] pointer-events-none -z-10">
-            <div className="absolute top-[60px] left-[15%] w-[360px] h-[360px] bg-[radial-gradient(circle,rgba(85,171,237,0.06),transparent_70%)] blur-[50px]" />
-            <div className="absolute top-[40px] right-[15%] w-[280px] h-[280px] bg-[radial-gradient(circle,rgba(181,150,229,0.06),transparent_70%)] blur-[50px]" />
-          </div>
-
-          <DevGridContainer centered className="max-w-[920px]">
+        <main id="main">
+        {/* ---------------- Hero ---------------- */}
+        <section className="pt-16 pb-20 md:pt-24 md:pb-28">
+          <DevGridContainer className="max-w-[860px]">
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="typography-eyebrow inline-flex items-center gap-2 rounded-full border border-foreground/10 bg-muted/40 px-3 py-1 text-primary mb-6"
+              transition={{ duration: 0.5 }}
+              className="mb-7 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground"
             >
-              <Terminal className="size-3.5" />
-              Staplehire CLI · v0.6
+              The Staplehire CLI
             </motion.div>
 
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.05 }}
-              className="typography-h1 text-balance"
+              transition={{ duration: 0.6, delay: 0.05 }}
+              className="typography-display max-w-[16ch] text-balance"
             >
               Give your agents a recruiting tool
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.12 }}
-              className="mt-5 text-xl font-medium tracking-tight text-foreground sm:text-2xl"
+              transition={{ duration: 0.6, delay: 0.14 }}
+              className="mt-6 para-lg max-w-[52ch] text-muted-foreground"
             >
-              Source. Inbox. Investigate. Interview. Hire.
-            </motion.p>
-
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-              className="mt-4 para-lg text-muted-foreground max-w-[640px] mx-auto"
-            >
-              One CLI for your terminal and AI editor — roles, sourcing, screening, interviews, pipeline moves, and agent mail. JSON when piped; human-readable when you&apos;re at the shell.
+              Your entire hiring pipeline as a command line tool: roles, sourcing, screening, AI
+              interviews. Run it yourself, or hand it to your AI agents and ask them to hire.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.3 }}
-              className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
+              transition={{ duration: 0.6, delay: 0.22 }}
+              className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
             >
               <a href="#get-started" onClick={() => trackPageEvent('cli_cta_click', { location: 'hero' })}>
-                <Button className="rounded-full px-6 h-[46px] font-bold text-base shadow-lg shadow-primary/20">
+                <Button className="h-[46px] rounded-full px-7 text-[15px] font-bold shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-primary/40">
                   Install the CLI
                 </Button>
               </a>
               <a
-                href="https://staplehire.com"
-                className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-                onClick={() => trackPageEvent('cli_product_link')}
+                href={DOCS_URL}
+                onClick={() => trackPageEvent('cli_docs_click', { location: 'hero' })}
+                className={secondaryLinkClass}
               >
-                See the hiring agent →
+                Docs
               </a>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-              className="mt-12 max-w-[640px] mx-auto text-left"
+              transition={{ duration: 0.6, delay: 0.32 }}
+              className="mt-12 max-w-[620px]"
             >
-              <div className="flex items-center justify-between gap-3 rounded-t-xl border border-b-0 border-foreground/10 bg-[#0d0d0d] px-4 py-2.5 dark:border-white/10">
-                <span className="font-mono text-xs text-white/50">terminal</span>
-                <CopyInstallButton />
-              </div>
-              <pre className="rounded-b-xl border border-foreground/10 bg-[#0d0d0d] px-4 py-4 font-mono text-[13px] text-[#e8e6e3] dark:border-white/10">
-                <span className="text-white/40">$ </span>
-                {INSTALL_CMD}
-                {'\n'}
-                <span className="text-white/40">$ </span>
-                staplehire login
-              </pre>
+              <CodeCard title="terminal" copyText={`${INSTALL_CMD}\nstaplehire login`} copyEvent="cli_install_copy">
+                <Line tokens={[{ t: '$ ', c: C.dim }, { t: 'npm install -g ', c: C.cmd }, { t: '@staplehire/staplehire-cli', c: C.key }]} />
+                <Line tokens={[{ t: '$ ', c: C.dim }, { t: 'staplehire', c: C.key }, { t: ' login', c: C.cmd }]} />
+                <Line tokens={[{ t: '✓ Authenticated as ', c: C.str }, { t: 'Acme Corp', c: C.cmd }]} />
+              </CodeCard>
             </motion.div>
           </DevGridContainer>
         </section>
 
         <DevGridRule />
 
-        {/* 2. One CLI — pipeline tabs (context.dev “One API” section) */}
+        {/* ---------------- Install ---------------- */}
+        <section className="py-16 md:py-24">
+          <DevGridContainer>
+            <div className="grid gap-10 md:grid-cols-2 md:gap-16">
+              <ScrollReveal>
+                <h2 className="typography-h2 text-balance">Two commands to set up</h2>
+                <p className="mt-4 para-lg max-w-[44ch] text-muted-foreground">
+                  Install globally and log in once. Agents and CI environments skip the browser.
+                  Set <code className="font-mono text-[0.9em]">STAPLEHIRE_KEY</code> and they run
+                  unattended.
+                </p>
+                <div className="mt-7 flex flex-wrap items-center gap-4">
+                  <a
+                    href={NPM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackPageEvent('cli_npm_link')}
+                    className={secondaryLinkClass}
+                  >
+                    npm
+                  </a>
+                  <a
+                    href={DOCS_URL}
+                    onClick={() => trackPageEvent('cli_docs_click', { location: 'install' })}
+                    className={secondaryLinkClass}
+                  >
+                    Installation guide →
+                  </a>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={0.06} className="flex flex-col gap-4">
+                <CodeCard title="Install globally with npm" copyText={INSTALL_CMD} copyEvent="cli_install_copy">
+                  <Line tokens={[{ t: 'npm install -g ', c: C.cmd }, { t: '@staplehire/staplehire-cli', c: C.key }]} />
+                </CodeCard>
+                <CodeCard title="Or set an API key (agents & CI)" copyText={KEY_CMD} copyEvent="cli_key_copy">
+                  <Line tokens={[{ t: 'export ', c: C.kw }, { t: 'STAPLEHIRE_KEY', c: C.cmd }, { t: '=', c: C.dim }, { t: '"sh_live_your_key_here"', c: C.str }]} />
+                </CodeCard>
+              </ScrollReveal>
+            </div>
+          </DevGridContainer>
+        </section>
+
+        <DevGridRule />
+
+        {/* ---------------- Why ---------------- */}
         <section className="py-16 md:py-24">
           <DevGridContainer>
             <ScrollReveal>
-              <p className="typography-eyebrow text-primary mb-3">For AI agents</p>
-              <h2 className="typography-h2 text-balance max-w-[720px]">
-                One CLI.{' '}
-                <span className="text-muted-foreground">The full hiring loop.</span>
+              <h2 className="typography-h2 max-w-[20ch] text-balance">
+                Full pipeline coverage, tuned for the terminal
               </h2>
-              <p className="mt-4 para-lg text-muted-foreground max-w-[600px]">
-                Same primitives your dashboard uses — exposed as stable commands with JSON output for automation.
+              <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
+                Anything you can do in the Staplehire app is available in the CLI, too.
               </p>
             </ScrollReveal>
-
-            <ScrollReveal delay={0.05}>
-              <AgentPipelineShowcase />
-            </ScrollReveal>
+            <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-foreground/10 bg-foreground/[0.06] sm:grid-cols-3">
+              {WHY.map((item, i) => (
+                <ScrollReveal key={item.title} delay={0.04 * i} className="h-full">
+                  <div className="flex h-full flex-col bg-background p-6 md:p-7">
+                    <span className="font-mono text-[12px] text-primary">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 className="typography-h3 mt-4 text-[19px] font-medium text-foreground sm:text-[20px]">
+                      {item.title}
+                    </h3>
+                    <p className="para mt-3 text-muted-foreground">{item.body}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
           </DevGridContainer>
         </section>
 
         <DevGridRule />
 
-        {/* 3. Built for agents — context.dev “Connect your agent” cards */}
-        <section className="py-16 md:py-24 bg-muted/30 dark:bg-muted/15">
+        {/* ---------------- Working code ---------------- */}
+        <section className="py-16 md:py-24">
           <DevGridContainer>
             <ScrollReveal>
               <h2 className="typography-h2 text-balance">
-                Wire hiring into Cursor, Claude Code, Codex, OpenClaw, Hermes, and Pi
+                Built for humans. Built for agents.
               </h2>
-              <p className="mt-4 para-lg text-muted-foreground max-w-[620px]">
-                Install skills, discover commands programmatically, and run the same flows you would in the app — without leaving the editor.
+              <p className="mt-4 para-lg max-w-[52ch] text-muted-foreground">
+                At the shell you get readable, interactive output. Agents and CI get structured
+                JSON with stable exit codes. Prompt in plain English or script it. Same commands either way.
               </p>
             </ScrollReveal>
-
-            <ScrollReveal delay={0.06}>
-              <EditorAgentCards />
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.1} className="mt-10">
-              <p className="para text-muted-foreground mb-3">Agent skill install</p>
-              <CodePanel code={`staplehire skills install
-# Copies Staplehire agent skills into your editor`} />
+            <ScrollReveal delay={0.06} className="mt-9">
+              <WorkingCode />
             </ScrollReveal>
           </DevGridContainer>
         </section>
 
         <DevGridRule />
 
-        {/* 4. Final CTA — context.dev closing section */}
-        <section id="get-started" className="py-20 md:py-28">
-          <DevGridContainer centered className="max-w-[720px]">
+        {/* ---------------- Editors / agents ---------------- */}
+        <section className="py-16 md:py-24">
+          <DevGridContainer>
             <ScrollReveal>
-              <h2 className="typography-h2 text-balance">
-                Ship an agent that can actually hire
+              <h2 className="typography-h2 max-w-[22ch] text-balance">
+                Your agents can hire now
               </h2>
-              <p className="mt-5 para-lg text-muted-foreground">
-                Self-serve install, browser login, and a machine-readable command tree. Start in minutes from your repo root.
+              <p className="mt-4 para-lg max-w-[56ch] text-muted-foreground">
+                One skill install and Cursor, Claude Code, Codex, OpenClaw, Hermes, or Pi can run
+                your hiring end to end. Ask in plain English; the agent drives the CLI.
               </p>
             </ScrollReveal>
+            <ScrollReveal delay={0.06}>
+              <EditorAgentCards />
+            </ScrollReveal>
+            <ScrollReveal delay={0.1} className="mt-6 max-w-[620px]">
+              <CodeCard title="Install the agent skill" copyText={SKILL_CMD} copyEvent="cli_skill_copy">
+                <Line tokens={[{ t: 'staplehire', c: C.key }, { t: ' skills install', c: C.cmd }]} />
+                <Line tokens={[{ t: '# → .agents/skills/staplehire, .claude/…, .cursor/…', c: C.comment }]} />
+              </CodeCard>
+            </ScrollReveal>
+          </DevGridContainer>
+        </section>
 
+        <DevGridRule />
+
+        {/* ---------------- FAQ ---------------- */}
+        <section className="py-16 md:py-24">
+          <DevGridContainer>
+            <div className="grid gap-10 md:grid-cols-[0.8fr_1.2fr] md:gap-16">
+              <ScrollReveal>
+                <h2 className="typography-h2 text-balance">FAQ</h2>
+                <p className="mt-4 para-lg text-muted-foreground">
+                  Common questions about the Staplehire CLI and agents.
+                </p>
+              </ScrollReveal>
+              <ScrollReveal delay={0.05}>
+                <div className="border-t border-foreground/10">
+                  {FAQ.map((item, i) => (
+                    <FaqItem key={item.q} q={item.q} a={item.a} defaultOpen={i === 0} />
+                  ))}
+                </div>
+              </ScrollReveal>
+            </div>
+          </DevGridContainer>
+        </section>
+
+        <DevGridRule />
+
+        {/* ---------------- Closing CTA ---------------- */}
+        <section id="get-started" className="py-24 md:py-32">
+          <DevGridContainer centered className="max-w-[720px]">
+            <ScrollReveal>
+              <h2 className="typography-h1 text-balance">Hire someone this afternoon</h2>
+              <p className="mt-5 para-lg mx-auto max-w-[46ch] text-muted-foreground">
+                Install the CLI, log in, and your terminal (or your agent) is ready to recruit.
+              </p>
+            </ScrollReveal>
             <ScrollReveal delay={0.08} className="mt-10">
-              <div className="inline-flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto max-w-md mx-auto">
-                <code className="flex-1 rounded-xl border border-foreground/10 bg-muted/50 px-4 py-3 font-mono text-sm text-left dark:border-white/10">
+              <div className="mx-auto flex max-w-[560px] items-center gap-3 rounded-xl border border-white/10 bg-[#0B0C0D] px-4 py-3 text-left">
+                <span className="font-mono text-[13px] text-white/35">$</span>
+                <code className="flex-1 overflow-x-auto whitespace-nowrap font-mono text-[13px] text-[#E8E6E3]">
                   {INSTALL_CMD}
                 </code>
-                <CopyInstallButton />
+                <CopyButton text={INSTALL_CMD} event="cli_install_copy" />
               </div>
-              <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
-                <a
-                  href="https://www.npmjs.com/package/@staplehire/staplehire-cli"
-                  className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackPageEvent('cli_npm_link')}
-                >
-                  npm package
+              <div className="mt-7 flex justify-center">
+                <a href={DOCS_URL} onClick={() => trackPageEvent('cli_docs_click', { location: 'cta' })}>
+                  <Button className="h-[46px] rounded-full px-7 text-[15px] font-bold shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-primary/40">
+                    Read the docs
+                  </Button>
                 </a>
-                <span className="text-muted-foreground/40" aria-hidden>
-                  ·
-                </span>
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline bg-transparent border-0 cursor-pointer p-0 font-inherit text-sm"
-                  onClick={() => {
-                    trackPageEvent('cli_docs_click');
-                    window.open('https://staplehire.com/docs', '_blank');
-                  }}
-                >
-                  staplehire docs
-                </button>
               </div>
             </ScrollReveal>
           </DevGridContainer>
         </section>
-      </main>
-
-      <DevGridRule />
-
-      <footer className="bg-[var(--primitive-sunken)] py-8 dark:bg-card">
-        <DevGridContainer className="flex flex-col items-center gap-3">
-          <Logo size="footer" />
-          <p className="text-sm text-muted-foreground text-center">
-            <a href="/" className="underline-offset-4 hover:underline">
-              Staplehire product
-            </a>
-            {' · '}
-            CLI for agents &amp; terminals
-          </p>
-        </DevGridContainer>
-      </footer>
-    </DevGridShell>
+        </main>
+      </DevGridShell>
+    </SiteLayout>
   );
 }
+
+export function Component() {
+  return <CliLandingPage />;
+}
+
+export default CliLandingPage;

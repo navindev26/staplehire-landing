@@ -1,20 +1,38 @@
 ---
-title: "Create a role with the Staplehire CLI"
-description: "Create a Staplehire role from a job description file, stdin, or inline text using the CLI."
+title: "Create a role"
+description: "Create a Staplehire role from a job description file, stdin, or inline text using the CLI, then list, inspect, and view candidates on it."
 sidebarTitle: "Create a role"
 ---
 
-Create a role from a job description and get a role ID plus apply URL back as JSON.
+Create a role from a job description and get back a role ID plus an apply URL as JSON. The role is the anchor for stages, candidates, sourcing, and interviews.
 
 ```bash
 staplehire roles create --jd "Senior backend engineer. TypeScript, remote."
 ```
 
-## Quickstart
+## Create a role
 
-```bash
+The `--jd` flag accepts inline text, a file path, an `@path`, or `-` for stdin.
+
+<CodeGroup>
+
+```bash Inline text
 staplehire roles create --jd "Staff engineer. Go, Kubernetes, on-call."
 ```
+
+```bash From a file
+staplehire roles create --jd ./job-description.md
+```
+
+```bash From @path
+staplehire roles create --jd @./job-description.md
+```
+
+```bash From stdin
+cat job-description.md | staplehire roles create --jd -
+```
+
+</CodeGroup>
 
 Example output:
 
@@ -23,79 +41,79 @@ Example output:
   "role": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "title": "Staff Engineer",
-    "organization_id": "org_...",
+    "organization_id": "org_…",
     "status": "active"
   },
   "apply_url": "https://app.staplehire.com/apply/550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-Extract the role ID for later commands:
+Capture the role ID for later commands:
 
 ```bash
 ROLE_ID=$(staplehire roles create --jd @job-description.md | jq -r '.role.id')
 ```
 
-## Parameters
+### Parameters
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--jd <text>` | Yes | Job description string, file path, `@path`, or `-` for stdin |
-
-## Examples
-
-### Create a role from inline text
-
-```bash
-staplehire roles create --jd "Senior SDR. B2B SaaS, outbound, Sydney."
-```
-
-### Create a role from a Markdown file
-
-```bash
-staplehire roles create --jd @./job-description.md
-```
-
-### Create a role from stdin
-
-```bash
-cat job-description.md | staplehire roles create --jd -
-```
+| `--jd <value>` | Yes | Job description: inline string, file path, `@path`, or `-` for stdin |
 
 ## List and inspect roles
 
 ```bash
-staplehire roles list --status active
-staplehire roles get <roleId>
-staplehire roles candidates <roleId>
+staplehire roles list                       # all roles
+staplehire roles list --status active        # filter by status
+staplehire roles list --q "engineer"         # search title/description
+staplehire roles list --limit 10             # cap results
+staplehire roles get <roleId>                # one role
+staplehire roles candidates <roleId>         # candidates on the role
 ```
 
 `roles list` returns:
 
 ```json
-{ "roles": [ { "id": "...", "title": "Backend Engineer", "status": "active" } ] }
+{
+  "roles": [
+    { "id": "550e8400-…", "title": "Backend Engineer", "status": "active" }
+  ]
+}
+```
+
+### List candidates on a role
+
+Filter the pipeline view by stage or source:
+
+```bash
+staplehire roles candidates <roleId> --stage-id <stageId>
+staplehire roles candidates <roleId> --source sourcing
+```
+
+```json
+{ "candidates": [ { "id": "cand_…", "email": "alex@example.com", "stage_id": "stage_…" } ] }
 ```
 
 ## Common errors
 
-| Error | Cause | Fix |
+| Error | Exit code | Fix |
 | --- | --- | --- |
-| `ValidationError` | Missing or empty `--jd` | Pass a JD string, `@file`, or `-` |
-| `AuthenticationError` | API key is missing | Run `staplehire login` or set `STAPLEHIRE_KEY` |
-| `PermissionError` | Key cannot create roles | Check organization permissions |
+| `ValidationError` | `3` | Missing or empty `--jd` — pass a string, `@file`, or `-` |
+| `AuthenticationError` | `2` | Run `staplehire login` or set `STAPLEHIRE_KEY` |
+| `PermissionError` | `6` | The key cannot create roles — check organization permissions |
 
 ## FAQ
 
-### Can the CLI parse a job description file?
+<AccordionGroup>
+  <Accordion title="Can the CLI read a job description from a file?">
+    Yes. Use `--jd @./job-description.md` (the `@` prefix), a plain path, or pipe via `--jd -`.
+  </Accordion>
+  <Accordion title="What value do candidate and sourcing commands need?">
+    The `.role.id` from `roles create`, `roles list`, or `roles get`.
+  </Accordion>
+  <Accordion title="Does creating a role return an apply URL?">
+    Yes. Read `.apply_url` — it points at `app.staplehire.com/apply/<roleId>`.
+  </Accordion>
+</AccordionGroup>
 
-Yes. Use `--jd @./job-description.md`.
-
-### What value do I pass to candidate and sourcing commands?
-
-Use `.role.id` from the `roles create`, `roles list`, or `roles get` output.
-
-### Does role creation return an apply URL?
-
-Yes. Read `.apply_url` from the JSON output.
-
-Related: [Add a candidate with the Staplehire CLI](/add-candidate-cli) · [Source candidates with the Staplehire CLI](/source-candidates-cli) · [Command reference](/commands)
+Related: [Manage stages](/stages-cli) · [Add a candidate](/add-candidate-cli) · [Source candidates](/source-candidates-cli)
