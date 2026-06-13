@@ -169,9 +169,6 @@ export function SiteHeader({ activePage }: SiteHeaderProps = {}) {
               >
                 {isDark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
               </button>
-              <a href={`${APP_URL}/login`} className={navLinkClass}>
-                Sign in
-              </a>
               <a
                 href="/#demo"
                 onClick={() => trackPageEvent('landing_pilot_request_click', { location: 'nav' })}
@@ -247,13 +244,6 @@ export function SiteHeader({ activePage }: SiteHeaderProps = {}) {
                   </a>
                 )
               )}
-              <a
-                href={`${APP_URL}/login`}
-                className={`${navLinkClass} py-2`}
-                onClick={() => setMobileOpen(false)}
-              >
-                Sign in
-              </a>
               <a
                 href="/#demo"
                 onClick={() => {
